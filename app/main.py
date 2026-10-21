@@ -11,7 +11,15 @@ from pathlib import Path
 from app.config import BGM_DIR, DEVICE, OUTPUT_DIR, RECORD_FPS, RECORD_SECONDS
 
 
-def run_realtime(no_style):
+def get_stylizer(engine):
+    if engine == "mock":
+        from app.core.stylizer_mock import MockStylizer
+        return MockStylizer()
+    from app.core.stylizer_anime import AnimeStylizer
+    return AnimeStylizer(device=DEVICE)
+
+
+def run_realtime(no_style, engine="anime"):
     from app.core.camera import Camera, mirror
     from app.ui.realtime_window import RealtimeWindow
     cam = Camera().start()
@@ -19,15 +27,13 @@ def run_realtime(no_style):
         win = RealtimeWindow(cam, stylizer=lambda f: mirror(mirror(f)))
         win.run()
         return
-    from app.core.stylizer_anime import AnimeStylizer
-    st = AnimeStylizer(device=DEVICE)
+    st = get_stylizer(engine)
     print("stylizer ready, warming up...")
     st(mirror(cam.read()))
     RealtimeWindow(cam, st).run()
 
 
-def run_video(video_path):
-    from app.core.stylizer_anime import AnimeStylizer
+def run_video(video_path, engine="anime"):
     from app.core.video_batch import extract_frames, stylize_frames, cleanup
     from app.core.compose import frames_to_video
 
@@ -36,7 +42,7 @@ def run_video(video_path):
     print("extracting frames...")
     frames, fps = extract_frames(video_path, frames_dir)
     print(f"{len(frames)} frames @ {fps:.1f}fps, stylizing...")
-    st = AnimeStylizer(device=DEVICE)
+    st = get_stylizer(engine)
     styled = stylize_frames(frames, st, frames_dir, progress=lambda done, total: print(f"\r{done}/{total}", end=""))
     print()
     bgms = list(BGM_DIR.glob("*.mp3")) + list(BGM_DIR.glob("*.m4a"))
@@ -56,6 +62,8 @@ if __name__ == "__main__":
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     ap = argparse.ArgumentParser()
     ap.add_argument("--no-style", action="store_true")
+    ap.add_argument("--engine", choices=["anime", "mock"], default="anime",
+                    help="anime=AnimeGANv2（需装好环境）mock=纯流程验证（零依赖）")
     ap.add_argument("--video", help="输入视频路径（模式 B）")
     ap.add_argument("--serve", action="store_true")
     ap.add_argument("--port", type=int, default=8000)
@@ -64,6 +72,6 @@ if __name__ == "__main__":
     if args.serve:
         run_serve(args.port)
     elif args.video:
-        run_video(args.video)
+        run_video(args.video, args.engine)
     else:
-        run_realtime(args.no_style)
+        run_realtime(args.no_style, args.engine)
