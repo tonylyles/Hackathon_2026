@@ -1,0 +1,24 @@
+# 基础依赖
+# ⚠️ torch 必须先单独装 Blackwell(cu128) 版本，不要用本文件安装 torch：
+#    pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
+numpy
+opencv-python
+Pillow
+PyYAML
+
+# 二维码取图服务
+fastapi
+uvicorn[standard]
+qrcode[pil]
+
+# --- 可选：模式 B 视频合成（系统需另装 ffmpeg 并加入 PATH）---
+# ffmpeg-python
+
+# --- 可选：人像分割（不装则跳过抠图直接风格化）---
+# rembg[gpu]   # 或 rembg[cpu]
+
+# --- 可选：SD 生成大头贴（体积大，按需安装）---
+# diffusers
+# transformers
+# accelerate
+# safetensors

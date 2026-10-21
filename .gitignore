@@ -1,0 +1,24 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.idea/
+.vscode/
+
+# 模型权重（体积大，不入库）
+weights/
+models/
+*.pt
+*.pth
+*.safetensors
+*.onnx
+*.engine
+
+# 生成产物
+output/
+tmp/
+*.mp4
+*.avi
+
+# 日志
+*.log
