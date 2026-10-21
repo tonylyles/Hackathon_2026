@@ -23,14 +23,23 @@ def run_realtime(no_style, engine="anime"):
     from app.core.camera import Camera, mirror
     from app.ui.realtime_window import RealtimeWindow
     cam = Camera().start()
-    if no_style:
-        win = RealtimeWindow(cam, stylizer=lambda f: mirror(mirror(f)))
-        win.run()
-        return
-    st = get_stylizer(engine)
-    print("stylizer ready, warming up...")
-    st(mirror(cam.read()))
-    RealtimeWindow(cam, st).run()
+    try:
+        if no_style:
+            RealtimeWindow(cam, stylizer=lambda f: f).run()
+            return
+        st = get_stylizer(engine)
+        print("stylizer ready, warming up...")
+        deadline = time.monotonic() + 10
+        frame = cam.read()
+        while frame is None and time.monotonic() < deadline:
+            time.sleep(0.01)
+            frame = cam.read()
+        if frame is None:
+            raise RuntimeError("摄像头在 10 秒内没有返回画面")
+        st(mirror(frame))
+        RealtimeWindow(cam, st).run()
+    finally:
+        cam.stop()
 
 
 def run_video(video_path, engine="anime"):
@@ -38,16 +47,16 @@ def run_video(video_path, engine="anime"):
     from app.core.compose import frames_to_video
 
     tmp = Path("tmp") / f"job_{int(time.time())}"
-    frames_dir, fps = tmp / "in", tmp / "out"
+    frames_dir, styled_dir = tmp / "in", tmp / "out"
     print("extracting frames...")
     frames, fps = extract_frames(video_path, frames_dir)
     print(f"{len(frames)} frames @ {fps:.1f}fps, stylizing...")
     st = get_stylizer(engine)
-    styled = stylize_frames(frames, st, frames_dir, progress=lambda done, total: print(f"\r{done}/{total}", end=""))
+    styled = stylize_frames(frames, st, styled_dir, progress=lambda done, total: print(f"\r{done}/{total}", end=""))
     print()
     bgms = list(BGM_DIR.glob("*.mp3")) + list(BGM_DIR.glob("*.m4a"))
     out = OUTPUT_DIR / f"video_{int(time.time())}.mp4"
-    frames_to_video(frames_dir, out, fps=round(fps), bgm_path=bgms[0] if bgms else None)
+    frames_to_video(styled_dir, out, fps=fps, bgm_path=bgms[0] if bgms else None)
     cleanup(tmp)
     print("saved:", out)
 

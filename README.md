@@ -83,3 +83,29 @@ refs/                    8 个参考开源仓库的本地浅克隆（git 忽略�
 2. **xformers 不要装**：新架构用 PyTorch 自带 SDPA 即可
 3. **8GB 显存跑 SDXL**：代码里已开 attention slicing + vae tiling + cpu offload 三件套
 4. **ffmpeg**：`winget install ffmpeg` 后重开终端
+
+## 模拟引擎验收（不下载 AI 权重）
+
+`mock` 使用 OpenCV 描边，不代表 AI 画质或模型速度。模拟视频管线无需安装 torch；
+完整环境自检仍会检查 torch/CUDA，不能将模拟管线通过视为 GPU 验收通过。
+
+```powershell
+python -m pip install -r requirements-dev.txt
+# 若不安装系统 FFmpeg，可将开发依赖附带的可执行文件复制到虚拟环境：
+python -c "import imageio_ffmpeg,shutil,sys; from pathlib import Path; shutil.copy2(imageio_ffmpeg.get_ffmpeg_exe(), Path(sys.executable).parent / 'ffmpeg.exe')"
+# 请先激活 .venv，使 ffmpeg.exe 在 PATH 中
+python scripts/make_test_video.py
+python -m app.main --video test.mp4 --engine mock
+python -m unittest discover -s tests -v
+```
+
+摄像头窗口的有界检查（各约 8 秒后关闭；mock 自动触发一次截图）：
+
+```powershell
+python -m scripts.check_realtime --no-style
+python -m scripts.check_realtime
+```
+
+结果写入 `output/check_raw.json`、`output/check_mock.json`，截图也仅保存在本地。
+实时窗口只处理新采集的帧，FPS 不再重复计算同一张画面；它仍不代表端到端延迟。
+人工观察流畅度、拍摄延迟测量以及 Live2D 面捕验收需另外完成。

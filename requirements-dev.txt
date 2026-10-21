@@ -1,0 +1,5 @@
+-r requirements.txt
+
+# HTTP regression tests and a project-local FFmpeg executable (no system install).
+httpx
+imageio-ffmpeg

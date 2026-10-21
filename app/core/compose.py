@@ -8,10 +8,12 @@ def frames_to_video(frames_dir: Path, out_path: Path, fps=24, bgm_path=None, wid
     out_path.parent.mkdir(parents=True, exist_ok=True)
     cmd = ["ffmpeg", "-y",
            "-framerate", str(fps),
-           "-i", str(frames_dir / "styled_%05d.png"),
-           "-c:v", "libx264", "-pix_fmt", "yuv420p", "-r", "30"]
+           "-i", str(frames_dir / "styled_%05d.png")]
     if bgm_path and Path(bgm_path).exists():
-        cmd += ["-i", str(bgm_path), "-shortest", "-c:a", "aac", "-b:a", "128k"]
+        cmd += ["-stream_loop", "-1", "-i", str(bgm_path),
+                "-map", "0:v:0", "-map", "1:a:0", "-shortest",
+                "-c:a", "aac", "-b:a", "128k"]
+    cmd += ["-c:v", "libx264", "-pix_fmt", "yuv420p", "-r", "30"]
     cmd.append(str(out_path))
     r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="ignore")
     if r.returncode != 0:

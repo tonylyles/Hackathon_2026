@@ -11,6 +11,8 @@ class Camera:
         self.cap.set(cv2.CAP_PROP_FPS, 30)
         self._lock = threading.Lock()
         self._frame = None
+        self._sequence = 0
+        self._last_read_sequence = -1
         self._running = False
         if not self.cap.isOpened():
             raise RuntimeError(f"摄像头 {index} 打开失败")
@@ -27,9 +29,13 @@ class Camera:
                 continue
             with self._lock:
                 self._frame = frame
+                self._sequence += 1
 
-    def read(self):
+    def read(self, only_new=False):
         with self._lock:
+            if only_new and self._sequence == self._last_read_sequence:
+                return None
+            self._last_read_sequence = self._sequence
             return None if self._frame is None else self._frame.copy()
 
     def stop(self):

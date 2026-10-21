@@ -18,8 +18,11 @@ class RealtimeWindow:
         show_styled = True
         last = time.perf_counter()
         while True:
-            frame = self.camera.read()
+            frame = self.camera.read(only_new=True)
             if frame is None:
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    break
+                time.sleep(0.001)
                 continue
             frame = mirror(frame)
             out = frame
