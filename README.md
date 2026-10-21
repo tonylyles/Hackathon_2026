@@ -1,4 +1,4 @@
-# FallBeats? No — AI PhotoBooth 📸✨
+# AI PhotoBooth 📸✨
 
 > 2026 秋季 AI 黑客松参赛项目（华南师大 AI 创新协会）
 > 产品说明见 `项目说明.md`，本文件是**开发指南**。
