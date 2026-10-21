@@ -52,7 +52,25 @@ app/
 scripts/
 ├── check_env.py         环境自检（第一个跑的脚本）
 output/                  生成作品（git 忽略）
+refs/                    8 个参考开源仓库的本地浅克隆（git 忽略，见下）
 ```
+
+## 本地参考仓库（refs/，已 gitignore）
+
+`git clone --depth 1` 镜像的开源参考项目，离线可查（约 260MB）：
+
+| 本地路径 | 上游 | 用途 |
+|---|---|---|
+| refs/animegan2-pytorch | bryandlee/animegan2-pytorch | 模式 A 保底引擎 |
+| refs/StreamDiffusion | cumulo-autumn/StreamDiffusion | 实时扩散管线 V1（TensorRT 路线） |
+| refs/StreamDiffusionV2 | chenfengxu714/StreamDiffusionV2 | 实时视频扩散 V2（免 TensorRT） |
+| refs/Practical-RIFE | hzwer/Practical-RIFE | 补帧时序平滑 |
+| refs/Open-LLM-VTuber | Open-LLM-VTuber | 数字人全套（LLM+面捕+TTS） |
+| refs/photobooth-app | photobooth-app/photobooth-app | 照相亭交互参考 |
+| refs/LivePortrait | KwaiVGI/LivePortrait | 表情移植 |
+| refs/lora-scripts | Akegarasu/lora-scripts | LoRA 训练整合包 |
+
+重新镜像：`git clone --depth 1 --single-branch <上游URL> refs/<名称>`
 
 ## 分工接口契约
 
