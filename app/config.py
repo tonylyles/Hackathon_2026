@@ -6,7 +6,7 @@ OUTPUT_DIR = ROOT / "output"          # 生成的作品（图片/视频）
 FRAME_DIR = ROOT / "assets" / "frames"
 BGM_DIR = ROOT / "assets" / "bgm"
 
-CAMERA_INDEX = 0
+CAMERA_INDEX = 1          # 0=笔记本内置，1=Camo(iPhone)——实测以 brightness_probe.py 输出为准
 CAMERA_W, CAMERA_H = 1280, 720
 
 # 推理设置
