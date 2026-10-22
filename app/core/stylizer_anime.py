@@ -11,7 +11,8 @@ class AnimeStylizer:
         self.device = device if torch.cuda.is_available() else "cpu"
         self.size = size
         self.model = torch.hub.load(
-            "bryandlee/animegan2-pytorch:main", weight, device=self.device,
+            "bryandlee/animegan2-pytorch:main", "generator",
+            pretrained=weight, device=self.device,
             trust_repo=True,
         )
         if self.device == "cuda" and USE_HALF:
