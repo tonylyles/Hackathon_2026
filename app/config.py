@@ -11,7 +11,9 @@ CAMERA_W, CAMERA_H = 1280, 720
 
 # 推理设置
 DEVICE = "cuda"            # cuda | cpu
-STYLE_SIZE = 512           # 风格化推理分辨率（降低可换速度）
+STYLE_SIZE = 512           # 离线模式 B / SD 精修的推理分辨率
+REALTIME_SIZE = 256        # 模式 A 实时推理分辨率（实测 256px fp16 ≈ 22 FPS；512 ≈ 4 FPS）
+                           # ↑ cuDNN 对 Blackwell(sm_120) 的卷积内核尚不成熟，等 TensorRT/新版本再上 512
 REALTIME_TARGET_FPS = 30
 USE_HALF = True            # fp16
 

@@ -17,13 +17,21 @@ class RealtimeWindow:
     def run(self):
         show_styled = True
         last = time.perf_counter()
+        # 相位计时（每 90 帧打印一次，定位性能瓶颈用）
+        import collections
+        acc = collections.Counter()
+        cnt = 0
         while True:
+            t0 = time.perf_counter()
             frame = self.camera.read(only_new=True)
             if frame is None:
-                if cv2.waitKey(1) & 0xFF == ord('q'):
+                if cv2.pollKey() & 0xFF == ord('q'):
                     break
                 time.sleep(0.001)
+                acc["wait_cam"] += time.perf_counter() - t0
                 continue
+            acc["wait_cam"] += time.perf_counter() - t0
+            t1 = time.perf_counter()
             frame = mirror(frame)
             out = frame
             if show_styled:
@@ -33,16 +41,20 @@ class RealtimeWindow:
                     cv2.putText(frame, f"stylizer error: {e}", (10, 30),
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
                     out = frame
+            acc["stylize"] += time.perf_counter() - t1
+            t2 = time.perf_counter()
 
             now = time.perf_counter()
             self.fps = 0.9 * self.fps + 0.1 * (1 / max(1e-6, now - last))
             last = now
             self._hud(out)
+            acc["show"] += time.perf_counter() - t2
 
             cv2.namedWindow("AI PhotoBooth", cv2.WINDOW_NORMAL)
             cv2.setWindowProperty("AI PhotoBooth", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
             cv2.imshow("AI PhotoBooth", out)
-            key = cv2.waitKey(1) & 0xFF
+            # pollKey 非阻塞且不引入 waitKey(1) 在 Windows 上的 ~15ms 挂起
+            key = cv2.pollKey() & 0xFF
             if key == ord('q'):
                 break
             elif key == ord(' '):
@@ -51,6 +63,13 @@ class RealtimeWindow:
                 p = f"output/snap_{int(time.time())}.png"
                 cv2.imwrite(p, out)
                 print("saved:", p)
+            cnt += 1
+            if cnt % 90 == 0:
+                total = sum(acc.values())
+                print(f"[perf] {self.fps:5.1f} FPS | " +
+                      " | ".join(f"{k}={v/cnt*1000:.1f}ms" for k, v in acc.items()) +
+                      f" | sum={total/cnt*1000:.1f}ms")
+                acc.clear(); cnt = 0
         cv2.destroyAllWindows()
 
     def _hud(self, frame):
