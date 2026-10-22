@@ -4,9 +4,9 @@ import cv2
 
 
 class Camera:
-    def __init__(self, index=0, width=1280, height=720):
-        # MSMF 后端：实测 Camo 虚拟摄像头 27fps（DSHOW 只有 10fps）
-        self.cap = cv2.VideoCapture(index, cv2.CAP_MSMF)
+    def __init__(self, index=0, width=1280, height=720, backend="MSMF"):
+        b = cv2.CAP_MSMF if backend == "MSMF" else cv2.CAP_DSHOW
+        self.cap = cv2.VideoCapture(index, b)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
         self.cap.set(cv2.CAP_PROP_FPS, 30)

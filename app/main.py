@@ -8,7 +8,7 @@ import argparse
 import time
 from pathlib import Path
 
-from app.config import BGM_DIR, DEVICE, OUTPUT_DIR, RECORD_FPS, RECORD_SECONDS
+from app.config import BGM_DIR, CAMERA_BACKEND, DEVICE, OUTPUT_DIR, RECORD_FPS, RECORD_SECONDS
 
 
 def get_stylizer(engine):
@@ -22,7 +22,7 @@ def get_stylizer(engine):
 def run_realtime(no_style, engine="anime"):
     from app.core.camera import Camera, mirror
     from app.ui.realtime_window import RealtimeWindow
-    cam = Camera().start()
+    cam = Camera(backend=CAMERA_BACKEND).start()
     try:
         if no_style:
             RealtimeWindow(cam, stylizer=lambda f: f).run()

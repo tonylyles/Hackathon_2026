@@ -6,7 +6,9 @@ OUTPUT_DIR = ROOT / "output"          # 生成的作品（图片/视频）
 FRAME_DIR = ROOT / "assets" / "frames"
 BGM_DIR = ROOT / "assets" / "bgm"
 
-CAMERA_INDEX = 1          # 0=笔记本内置，1=Camo(iPhone)——实测以 brightness_probe.py 输出为准
+CAMERA_INDEX = 0          # ⚠️ OpenCV DSHOW 的枚举顺序与 pygrabber 相反：实测 0=Camo(iPhone) 1=HD Camera(内置)
+                          #    验证方法：scripts/test_cameras.py 截图对比 Camo Studio 预览
+CAMERA_BACKEND = "DSHOW"  # MSMF | DSHOW——实测 Camo: DSHOW 30fps/亮度130，MSMF 29fps/亮度91；内置: MSMF 27.8fps
 CAMERA_W, CAMERA_H = 1280, 720
 
 # 推理设置
@@ -16,6 +18,8 @@ REALTIME_SIZE = 256        # 模式 A 实时推理分辨率（实测 256px fp16 
                            # ↑ cuDNN 对 Blackwell(sm_120) 的卷积内核尚不成熟，等 TensorRT/新版本再上 512
 REALTIME_TARGET_FPS = 30
 USE_HALF = True            # fp16
+SHARPEN = True             # 显示前锐化（补偿 256px 放大的模糊感）
+DISPLAY_W, DISPLAY_H = 1280, 720
 
 # 模式 B
 RECORD_SECONDS = 4
