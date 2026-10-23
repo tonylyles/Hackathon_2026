@@ -10,6 +10,8 @@ PyYAML
 fastapi
 uvicorn[standard]
 qrcode[pil]
+# VTube Studio public WebSocket API
+websocket-client
 
 # --- 可选：模式 B 视频合成（系统需另装 ffmpeg 并加入 PATH）---
 # ffmpeg-python

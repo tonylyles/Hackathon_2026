@@ -28,7 +28,16 @@ python -m app.main --no-style
 # 7. 模式 B：对一段视频做风格化 + 合成 MP4（需 ffmpeg 在 PATH）
 python -m app.main --video test.mp4
 
-# 8. 取图服务（手机扫码下载）
+# 8. 交互式展台（拍照 / 4 秒风格化录像 / 扫码下载）
+python -m app.main --booth --engine anime
+# 无模型检查摄像头与交互窗口
+python -m app.main --booth --engine mock
+
+# 奶蛙 Live2D 控制台：先启动 VTube Studio、开启 API 并加载奶蛙模型
+python -m app.main --avatar-booth
+# 首次运行需在 VTube Studio 中批准插件授权；模型热键按 1-8 触发，R 刷新，Q 退出
+
+# 9. 取图服务（单独启动时）
 python -m app.main --serve
 ```
 
@@ -40,14 +49,17 @@ app/
 ├── config.py            全局配置：摄像头/风格预设/路径
 ├── core/                核心管线（纯函数式，互相解耦）
 │   ├── camera.py            摄像头采集线程（始终取最新帧）
+│   ├── booth.py              拍摄定时逻辑与作品安全落盘
 │   ├── stylizer_anime.py    AnimeGANv2 实时风格化（模式 A）
 │   ├── stylizer_sd.py       SD 生成精修照（扩展）
 │   ├── video_batch.py       视频帧批处理（模式 B，文件进/帧序列出）
 │   └── compose.py           ffmpeg 合成 MP4 + BGM
 ├── ui/
-│   └── realtime_window.py   全屏窗口 + HUD（FPS/按键提示）
+│   ├── booth_window.py       展台触屏拍照/录像/二维码
+│   └── realtime_window.py   全屏预览 + HUD（FPS/按键提示）
 └── server/
     ├── api.py               FastAPI 取图服务
+    ├── share.py             展台嵌入式分享服务生命周期
     └── qr.py                二维码生成
 scripts/
 ├── check_env.py         环境自检（第一个跑的脚本）

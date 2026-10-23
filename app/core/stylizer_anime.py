@@ -32,11 +32,29 @@ class AnimeStylizer:
 
     @torch.inference_mode()
     def __call__(self, frame_bgr):
-        img = cv2.resize(frame_bgr, (self.size, self.size))          # CPU 上唯一重活（~1-2ms）
+        height, width = frame_bgr.shape[:2]
+        scale = min(self.size / width, self.size / height)
+        resized_w = max(1, round(width * scale))
+        resized_h = max(1, round(height * scale))
+        interpolation = cv2.INTER_AREA if scale < 1 else cv2.INTER_CUBIC
+        img = cv2.resize(frame_bgr, (resized_w, resized_h), interpolation=interpolation)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        pad_left = (self.size - resized_w) // 2
+        pad_top = (self.size - resized_h) // 2
+        img = cv2.copyMakeBorder(
+            img,
+            pad_top,
+            self.size - resized_h - pad_top,
+            pad_left,
+            self.size - resized_w - pad_left,
+            cv2.BORDER_REFLECT_101,
+        )
         t = torch.from_numpy(img).to(self._in.device, non_blocking=True)
-        t = t.permute(2, 0, 1)[None]                                 # CHW
-        t = t.to(self._in.dtype).div_(127.5).sub_(1)                 # 原地归一化，少两次分配
-        out = self.model(t)[0]                                       # CHW RGB float（GPU）
-        out = out.mul(0.5).add(0.5).mul_(255).clamp_(0, 255).byte()  # 量化（GPU）
-        out = out.permute(1, 2, 0)[:, :, [2, 1, 0]]                  # RGB→BGR（GPU）
-        return out.contiguous().cpu().numpy()                        # 单次回传
+        t = t.permute(2, 0, 1)[None]
+        t = t.to(self._in.dtype).div_(127.5).sub_(1)
+        out = self.model(t)[0]
+        out = out.mul(0.5).add(0.5).mul_(255).clamp_(0, 255).byte()
+        out = out[:, pad_top:pad_top + resized_h, pad_left:pad_left + resized_w]
+        out = out.permute(1, 2, 0)[:, :, [2, 1, 0]]
+        out = out.contiguous().cpu().numpy()
+        return cv2.resize(out, (width, height), interpolation=cv2.INTER_LINEAR)

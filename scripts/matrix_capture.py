@@ -1,8 +1,10 @@
 # matrix_capture.py — 遍历 编号×后端 组合，保存每组的真实画面
 # 用法：python scripts/matrix_capture.py  （保持 Camo Studio 开启）
+from pathlib import Path
+
 import cv2
 
-OUT = "tmp"
+OUT = Path(__file__).resolve().parents[1] / "tmp"
 
 for index in [0, 1, 2]:
     for bname, backend in [("MSMF", cv2.CAP_MSMF), ("DSHOW", cv2.CAP_DSHOW)]:
@@ -23,7 +25,7 @@ for index in [0, 1, 2]:
         if not ok:
             print(f"index={index} [{bname}]: 无帧")
             continue
-        p = f"{OUT}/matrix_i{index}_{bname}.png"
+        p = OUT / f"matrix_i{index}_{bname}.png"
         ok2, enc = cv2.imencode(".png", frame)
         if ok2:
             enc.tofile(p)

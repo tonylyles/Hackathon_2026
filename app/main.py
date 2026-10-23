@@ -8,7 +8,10 @@ import argparse
 import time
 from pathlib import Path
 
-from app.config import BGM_DIR, CAMERA_BACKEND, DEVICE, OUTPUT_DIR, RECORD_FPS, RECORD_SECONDS
+from app.config import (BGM_DIR, CAMERA_BACKEND, CAMERA_H, CAMERA_INDEX, CAMERA_W,
+                        DEVICE, OUTPUT_DIR, RECORD_SECONDS, RECORD_FPS,
+                        VTS_API_URL, VTS_PLUGIN_NAME, VTS_PLUGIN_DEVELOPER,
+                        VTS_TIMEOUT_SECONDS)
 
 
 def get_stylizer(engine):
@@ -19,25 +22,56 @@ def get_stylizer(engine):
     return AnimeStylizer(device=DEVICE)
 
 
+def open_camera():
+    from app.core.camera import Camera
+    print(f"camera index={CAMERA_INDEX} backend={CAMERA_BACKEND} size={CAMERA_W}x{CAMERA_H}")
+    return Camera(index=CAMERA_INDEX, width=CAMERA_W, height=CAMERA_H,
+                  backend=CAMERA_BACKEND).start()
+
+
+def wait_for_frame(cam):
+    deadline = time.monotonic() + 10
+    frame = cam.read()
+    while frame is None and time.monotonic() < deadline:
+        time.sleep(0.01)
+        frame = cam.read()
+    if frame is None:
+        raise RuntimeError(f"摄像头 {CAMERA_INDEX} ({CAMERA_BACKEND}) 在 10 秒内没有返回画面")
+    return frame
+
+
 def run_realtime(no_style, engine="anime"):
-    from app.core.camera import Camera, mirror
+    from app.core.camera import mirror
     from app.ui.realtime_window import RealtimeWindow
-    cam = Camera(backend=CAMERA_BACKEND).start()
+    cam = open_camera()
     try:
+        frame = wait_for_frame(cam)
         if no_style:
             RealtimeWindow(cam, stylizer=lambda f: f).run()
             return
         st = get_stylizer(engine)
         print("stylizer ready, warming up...")
-        deadline = time.monotonic() + 10
-        frame = cam.read()
-        while frame is None and time.monotonic() < deadline:
-            time.sleep(0.01)
-            frame = cam.read()
-        if frame is None:
-            raise RuntimeError("摄像头在 10 秒内没有返回画面")
         st(mirror(frame))
         RealtimeWindow(cam, st).run()
+    finally:
+        cam.stop()
+
+
+def run_booth(no_style=False, engine="anime", port=8000):
+    from app.core.camera import mirror
+    from app.ui.booth_window import BoothWindow
+    from app.server.share import ShareServer
+
+    cam = open_camera()
+    try:
+        frame = wait_for_frame(cam)
+        st = get_stylizer(engine)
+        if not no_style:
+            st(mirror(frame))
+        with ShareServer(port=port) as server:
+            BoothWindow(cam, st, port=port, show_styled=not no_style,
+                        record_seconds=RECORD_SECONDS, record_fps=RECORD_FPS,
+                        share_ready=server.ready.is_set).run()
     finally:
         cam.stop()
 
@@ -61,6 +95,17 @@ def run_video(video_path, engine="anime"):
     print("saved:", out)
 
 
+def run_avatar_booth():
+    from app.core.vts_client import VTSClient
+    from app.core.vts_controller import VTSController
+    from app.ui.avatar_booth_window import AvatarBoothWindow
+
+    client = VTSClient(url=VTS_API_URL, plugin_name=VTS_PLUGIN_NAME,
+                       plugin_developer=VTS_PLUGIN_DEVELOPER,
+                       timeout=VTS_TIMEOUT_SECONDS)
+    AvatarBoothWindow(VTSController(client)).run()
+
+
 def run_serve(port=8000):
     import uvicorn
     from app.server.api import app
@@ -75,11 +120,17 @@ if __name__ == "__main__":
                     help="anime=AnimeGANv2（需装好环境）mock=纯流程验证（零依赖）")
     ap.add_argument("--video", help="输入视频路径（模式 B）")
     ap.add_argument("--serve", action="store_true")
+    ap.add_argument("--booth", action="store_true", help="拍照/4秒录像展台模式")
+    ap.add_argument("--avatar-booth", action="store_true", help="VTube Studio 奶蛙控制台")
     ap.add_argument("--port", type=int, default=8000)
     args = ap.parse_args()
 
-    if args.serve:
+    if args.avatar_booth:
+        run_avatar_booth()
+    elif args.serve:
         run_serve(args.port)
+    elif args.booth:
+        run_booth(args.no_style, args.engine, args.port)
     elif args.video:
         run_video(args.video, args.engine)
     else:

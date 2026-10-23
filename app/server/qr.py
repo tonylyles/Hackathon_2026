@@ -1,5 +1,6 @@
 # qr.py — 生成取图二维码（内容为局域网链接）
 import socket
+from urllib.parse import quote
 
 import qrcode
 
@@ -16,7 +17,7 @@ def lan_ip():
 
 
 def item_url(ip, port, name):
-    return f"http://{ip}:{port}/api/download/{name}"
+    return f"http://{ip}:{port}/api/download/{quote(name, safe='')}"
 
 
 def make_qr(data: str, path: str):

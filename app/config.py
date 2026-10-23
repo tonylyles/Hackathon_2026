@@ -6,10 +6,15 @@ OUTPUT_DIR = ROOT / "output"          # 生成的作品（图片/视频）
 FRAME_DIR = ROOT / "assets" / "frames"
 BGM_DIR = ROOT / "assets" / "bgm"
 
-CAMERA_INDEX = 0          # ⚠️ OpenCV DSHOW 的枚举顺序与 pygrabber 相反：实测 0=Camo(iPhone) 1=HD Camera(内置)
-                          #    验证方法：scripts/test_cameras.py 截图对比 Camo Studio 预览
-CAMERA_BACKEND = "DSHOW"  # MSMF | DSHOW——实测 Camo: DSHOW 30fps/亮度130，MSMF 29fps/亮度91；内置: MSMF 27.8fps
+CAMERA_INDEX = 1          # Camo 手机摄像头（已通过 MSMF 实拍确认）
+CAMERA_BACKEND = "MSMF"  # MSMF | DSHOW；Camo 在 MSMF 下输出有效画面
 CAMERA_W, CAMERA_H = 1280, 720
+
+# VTube Studio public WebSocket API (enable in VTS settings).
+VTS_API_URL = "ws://localhost:8001"
+VTS_PLUGIN_NAME = "Naiwa Booth"
+VTS_PLUGIN_DEVELOPER = "AI PhotoBooth"
+VTS_TIMEOUT_SECONDS = 8
 
 # 推理设置
 DEVICE = "cuda"            # cuda | cpu
