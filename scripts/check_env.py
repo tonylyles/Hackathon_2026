@@ -6,7 +6,7 @@ import shutil
 import subprocess
 import sys
 
-OK, WARN, FAIL = "✅", "⚠️ ", "❌"
+OK, WARN, FAIL = "[OK]", "[WARN]", "[FAIL]"
 results = []
 
 
@@ -54,7 +54,8 @@ except ImportError:
 # 其他依赖
 for mod, pkg, tip in [
     ("cv2", "opencv-python", ""), ("fastapi", "fastapi", ""), ("qrcode", "qrcode[pil]", ""),
-    ("yaml", "PyYAML", ""), ("rembg", "rembg", "（可选，缺省跳过抠图）"),
+    ("yaml", "PyYAML", ""), ("websocket", "websocket-client", "VTube Studio API 用"),
+    ("rembg", "rembg", "（可选，缺省跳过抠图）"),
     ("diffusers", "diffusers", "（可选，SD 生成用）"),
 ]:
     try:
@@ -83,5 +84,5 @@ print("\n===== 环境自检结果 =====")
 for icon, name, detail in results:
     print(f"{icon} {name}  {detail}")
 bad = sum(1 for r in results if r[0] == FAIL)
-print(f"\n{len(results) - bad}/{len(results)} 通过" + (f"，{bad} 项未通过" if bad else "，环境就绪 🎉"))
+print(f"\n{len(results) - bad}/{len(results)} 通过" + (f"，{bad} 项未通过" if bad else "，环境就绪"))
 sys.exit(1 if bad else 0)

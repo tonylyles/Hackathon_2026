@@ -55,9 +55,9 @@ class RealtimeWindow:
             self._hud(out)
             acc["show"] += time.perf_counter() - t2
 
-            cv2.namedWindow("AI PhotoBooth", cv2.WINDOW_NORMAL)
-            cv2.setWindowProperty("AI PhotoBooth", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
-            cv2.imshow("AI PhotoBooth", out)
+            cv2.namedWindow("Naiwa - PhotoBooth", cv2.WINDOW_NORMAL)
+            cv2.setWindowProperty("Naiwa - PhotoBooth", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+            cv2.imshow("Naiwa - PhotoBooth", out)
             # pollKey 非阻塞且不引入 waitKey(1) 在 Windows 上的 ~15ms 挂起
             key = cv2.pollKey() & 0xFF
             if key == ord('q'):

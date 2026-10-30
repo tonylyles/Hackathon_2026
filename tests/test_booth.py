@@ -73,6 +73,16 @@ class BoothTests(unittest.TestCase):
             self.assertEqual(stylizer.calls, 1)
             self.assertEqual(list(Path(folder).iterdir()), [result])
 
+    def test_composed_vts_photo_bypasses_stylizer(self):
+        with tempfile.TemporaryDirectory() as folder:
+            stylizer = CountingStylizer()
+            frame = np.full((12, 14, 3), 193, np.uint8)
+            result = BoothProcessor(stylizer, folder).process("photo", frame, composed=True)
+            import cv2
+            saved = cv2.imdecode(np.fromfile(result, dtype=np.uint8), cv2.IMREAD_COLOR)
+            self.assertTrue(np.array_equal(saved, frame))
+            self.assertEqual(stylizer.calls, 0)
+
     def test_failed_photo_does_not_publish_partial_file(self):
         class Broken:
             def __call__(self, _frame):

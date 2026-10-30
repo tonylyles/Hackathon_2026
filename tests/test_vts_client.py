@@ -59,6 +59,22 @@ class VTSClientTests(unittest.TestCase):
     def tearDown(self):
         self.temp.cleanup()
 
+    def test_request_reconnects_and_authenticates_again(self):
+        token = Path(self.temp.name) / "token.txt"
+        token.write_text("ok")
+        broken = ScriptedSocket([{"data": {"authenticated": True}}])
+        recovered = ScriptedSocket([{"data": {"authenticated": True}},
+                                    {"data": {"active": True}}])
+        sockets = iter((broken, recovered))
+        client = VTSClient(token_path=token, socket_factory=lambda *_a, **_kw: next(sockets))
+        client.connect()
+        broken.fail_next = OSError("closed")
+        self.assertTrue(client.get_api_state()["active"])
+        self.assertTrue(broken.closed)
+        self.assertEqual([m["messageType"] for m in recovered.sent],
+                         ["AuthenticationRequest", "APIStateRequest"])
+        client.close()
+
     def test_api_error_is_exposed(self):
         socket = ScriptedSocket([{"data": {"authenticated": True}},
                                  {"messageType": "APIError",
@@ -80,18 +96,37 @@ class VTSClientTests(unittest.TestCase):
         client.connect()
         self.assertTrue(client.get_api_state()["active"])
 
+    def test_available_models_and_load_model_requests(self):
+        token = Path(self.temp.name) / "token.txt"
+        token.write_text("ok")
+        socket = ScriptedSocket([{"data": {"authenticated": True}},
+                                 {"data": {"availableModels": [{"modelID": "frog"}]}},
+                                 {"data": {"modelID": "frog"}}])
+        client = VTSClient(token_path=token, socket_factory=lambda *_a, **_kw: socket)
+        self.assertEqual(client.get_available_models()["availableModels"][0]["modelID"], "frog")
+        self.assertEqual(client.load_model("frog")["modelID"], "frog")
+        self.assertEqual([item["messageType"] for item in socket.sent[-2:]],
+                         ["AvailableModelsRequest", "ModelLoadRequest"])
+        self.assertEqual(socket.sent[-1]["data"], {"modelID": "frog"})
+        with self.assertRaises(ValueError):
+            client.load_model("")
+
 
 class ScriptedSocket(FakeSocket):
     def __init__(self, payloads):
         super().__init__([])
         self.payloads = list(payloads)
         self.last_sent = None
+        self.fail_next = None
 
     def send(self, message):
         self.last_sent = message
         self.sent.append(json.loads(message))
 
     def recv(self):
+        if self.fail_next is not None:
+            error, self.fail_next = self.fail_next, None
+            raise error
         payload = dict(self.payloads.pop(0))
         request = json.loads(self.last_sent)
         payload.setdefault("requestID", request["requestID"])
@@ -117,6 +152,24 @@ class VTSControllerTests(unittest.TestCase):
         self.assertEqual(controller.trigger("think")["hotkeyID"], "think")
         with self.assertRaises(ValueError):
             controller.trigger("")
+
+    def test_list_and_load_models(self):
+        class Client:
+            def get_available_models(self):
+                return {"availableModels": [{"modelID": "frog", "modelName": "奶蛙", "modelLoaded": True},
+                                            {"modelID": "cat", "modelName": "小猫"},
+                                            {"modelName": "缺少 ID"}]}
+            def load_model(self, model_id):
+                return {"modelID": model_id}
+
+        controller = VTSController(Client())
+        self.assertEqual(controller.models(), [
+            {"model_id": "frog", "model_name": "奶蛙", "model_loaded": True},
+            {"model_id": "cat", "model_name": "小猫", "model_loaded": False},
+        ])
+        self.assertEqual(controller.load_model("cat"), {"modelID": "cat"})
+        with self.assertRaises(ValueError):
+            controller.load_model("  ")
 
 
 if __name__ == "__main__":

@@ -1,4 +1,4 @@
-# 交接说明 HANDOVER — AI PhotoBooth 项目全状态
+# 交接说明 HANDOVER — Naiwa - PhotoBooth 项目全状态
 
 > 交接对象：接手后续开发的 AI（Opus 5.5）/开发者
 > 交接时间：2026-10-22 晚

@@ -6,6 +6,9 @@ from pathlib import Path
 
 import cv2
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from app.core.camera import frame_is_black
+
 OUT = Path(__file__).resolve().parent.parent / "tmp"
 BACKENDS = [("DSHOW", cv2.CAP_DSHOW), ("MSMF", cv2.CAP_MSMF)]
 OK, NG = "[OK]", "[NG]"
@@ -16,13 +19,13 @@ def probe(index, backend_name, backend):
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
     ok, frame = False, None
-    for _ in range(30):  # 最多等 3 秒出帧
+    for _ in range(30):  # 最多等 3 秒取得有内容的画面
         ok, frame = cap.read()
-        if ok:
+        if ok and not frame_is_black(frame):
             break
         time.sleep(0.1)
     cap.release()
-    return (ok, frame) if ok else (False, None)
+    return (True, frame) if ok and not frame_is_black(frame) else (False, None)
 
 
 def main():
@@ -37,9 +40,8 @@ def main():
                 cv2.imwrite(str(p), frame)
                 found.append((index, bname, w, h, p))
                 print(f"{OK} 摄像头 index={index} [{bname}]  {w}x{h}  -> {p.name}")
-                break  # 该编号一个后端能用就行
-        else:
-            print(f"{NG} index={index} 不可用")
+            else:
+                print(f"{NG} index={index} [{bname}] 无有效画面（可能只有黑帧）")
     print("\n===== 结果 =====")
     for index, bname, w, h, p in found:
         print(f"index={index} [{bname}] {w}x{h}  截图: {p}")

@@ -1,4 +1,4 @@
-# AI PhotoBooth 📸
+# Naiwa - PhotoBooth 📸
 
 > 2026 秋季 AI 黑客松参赛项目｜中期检查点与公开作品资料草案
 > 当前方向：以 VTube Studio Live2D 角色为主角的互动大头贴展台。
@@ -13,7 +13,7 @@
 
 ## 中期检查点进度报告（可复制到平台）
 
-**项目名称：** AI PhotoBooth / VTube Studio 互动大头贴展台
+**项目名称：** Naiwa - PhotoBooth / VTube Studio 互动大头贴展台
 
 **队伍进度：** 已完成桌面拍照展台原型、拍摄结果保存和局域网二维码取件流程；已接入 VTube Studio API 状态/角色控制探索。VTube Studio 中的 Live2D 角色可由手机面捕驱动。项目已开启 VTube Studio 虚拟摄像头，但展台尚未成功读到该视频源。当前版本拍照和录像仍使用普通摄像头画面，尚未完成 VTS 角色画面进入作品及扫码交付的端到端验收。
 
@@ -25,7 +25,7 @@
 
 以下内容用于平台「我的队伍 → 参赛作品」，发布前请队伍核对人员、演示素材及最终功能状态。
 
-- **作品名称：**AI PhotoBooth——VTube Studio 互动大头贴
+- **作品名称：**Naiwa - PhotoBooth——VTube Studio 互动大头贴
 - **作品简介：**面向活动展位的桌面互动大头贴原型。计划将 VTube Studio 中由面捕驱动的 Live2D 角色画面接入拍照/短视频流程，并通过局域网二维码交付作品。目前拍照展台与扫码取件已实现；VTubeStudioCam 接入拍摄和成片流程仍在联调，现阶段不宣称该完整体验已验收。
 - **当前可展示内容：**交互式桌面展台、普通摄像头拍摄结果与扫码取件；VTube Studio 手机面捕驱动角色可单独展示。具体演示应如实注明当前 VTS 虚拟摄像头输入未打通。
 - **代码仓库（必填）：**https://github.com/tonylyles/Hackathon_2026
@@ -36,16 +36,16 @@
 
 ## 开发与试运行
 
-VTube Studio 路线本身不要求项目用 PyTorch 做风格化推理；不过仓库仍包含旧 AnimeGANv2/PyTorch 实现。无需 GPU 模型的交互与相机检查可使用 `mock` 引擎：
+VTube Studio 路线不使用 PyTorch 风格化推理；仓库仍保留旧 AnimeGANv2/PyTorch 真人摄像头模式。安装依赖后，双击 `启动照相亭.bat` 默认进入 **VTS 角色拍摄**（不会回退到真人摄像头或本地 torch）；也可以在终端启动：
 
 ```powershell
 py -3 -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
-python -m app.main --booth --engine mock --vts-preview
+python -m app.main --booth --vts-preview
 ```
 
-运行前在 VTube Studio 加载模型、连接面捕、启用 API 和虚拟摄像头。当前配置的 VTS 虚拟摄像头编号尚未确认；如果右侧预览显示打不开或黑屏，不代表 VTS API 或角色面捕失效。**当前启动命令仅验证已有展台/普通摄像头流程及 VTS 预览尝试，不代表拍照和录像已经使用 VTS 画面。**
+首次启动若检测到 VTube Studio 未运行，展台会尝试通过 Steam 启动一次，并在后台重连 API；在展台内可点“重试连接”。自动启动需要本机安装 Steam 和 VTube Studio，首次插件授权仍需在 VTS 内确认。请在 VTube Studio 加载角色、连接面捕、启用插件 API 及虚拟摄像头。角色画面和 VTS API 未就绪时展台会显示状态并阻止拍摄；虚拟摄像头设备编号依机器而异，需检查 `app/config.py` 中 `VTS_CAMERA_INDEX` 和实际摄像头画面。**仅显式运行 `python -m app.main --booth` 才启动旧的真人摄像头动漫风格化模式。**自动化模拟测试不代表此机器的 VTS 设备与扫码取件已通过实机验收。
 
 测试：
 

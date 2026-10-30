@@ -8,7 +8,7 @@ from fastapi.responses import FileResponse
 
 from app.config import OUTPUT_DIR
 
-app = FastAPI(title="AI PhotoBooth")
+app = FastAPI(title="Naiwa - PhotoBooth")
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 

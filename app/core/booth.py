@@ -1,5 +1,6 @@
 """Timed capture and atomic publication, independent of the display/camera hardware."""
 import math
+import threading
 import tempfile
 import uuid
 from pathlib import Path
@@ -35,7 +36,7 @@ class Recording:
         times = [t for t, _ in self.samples] + [self.seconds]
         if max(b - a for a, b in zip(times, times[1:])) > 0.75:
             raise ValueError("Camera stalled during recording; please reconnect and retry")
-        # Constant-frame-rate resampling keeps wall-clock duration at low camera FPS.
+        # Constant-frame-rate resampling keeps wall-clock duration at low source FPS.
         index = 0
         for tick in range(math.ceil(self.seconds * self.fps)):
             t = tick / self.fps
@@ -45,11 +46,12 @@ class Recording:
 
 
 class BoothProcessor:
-    def __init__(self, stylizer, output_dir=OUTPUT_DIR):
+    def __init__(self, stylizer, output_dir=OUTPUT_DIR, stylizer_lock=None):
         self.stylizer = stylizer
+        self.stylizer_lock = stylizer_lock or threading.Lock()
         self.output_dir = Path(output_dir)
 
-    def process(self, kind, source, progress=lambda done, total: None):
+    def process(self, kind, source, progress=lambda done, total: None, *, composed=False):
         self.output_dir.mkdir(parents=True, exist_ok=True)
         scratch = ROOT / "tmp"
         scratch.mkdir(exist_ok=True)
@@ -60,27 +62,42 @@ class BoothProcessor:
         with tempfile.TemporaryDirectory(prefix="booth_", dir=scratch) as folder:
             job = Path(folder)
             if kind == "photo":
-                styled = self.stylizer(source)
+                if composed:
+                    image = source
+                else:
+                    with self.stylizer_lock:
+                        image = self.stylizer(source)
                 pending = job / (name + suffix)
-                write_image(pending, styled)
+                write_image(pending, image)
                 progress(1, 1)
             elif kind == "video":
-                raw = job / "raw"
-                raw.mkdir()
-                paths = []
-                for i, frame in enumerate(source.frames()):
-                    path = raw / f"frame_{i:05d}.png"
-                    write_image(path, frame)
-                    paths.append(path)
-                if not paths:
-                    raise ValueError("No camera frames were recorded")
-                styled_dir = job / "styled"
-                total = len(paths)
+                if composed:
+                    styled_dir = job / "styled"
+                    styled_dir.mkdir()
+                    frames = list(source.frames())
+                    if not frames:
+                        raise ValueError("No VTS frames were recorded")
+                    for i, frame in enumerate(frames):
+                        write_image(styled_dir / f"styled_{i:05d}.png", frame)
+                        progress(i + 1, len(frames))
+                else:
+                    raw = job / "raw"
+                    raw.mkdir()
+                    paths = []
+                    for i, frame in enumerate(source.frames()):
+                        path = raw / f"frame_{i:05d}.png"
+                        write_image(path, frame)
+                        paths.append(path)
+                    if not paths:
+                        raise ValueError("No camera frames were recorded")
+                    styled_dir = job / "styled"
+                    total = len(paths)
 
-                def report(done, _total):
-                    progress(done, total)
+                    def report(done, _total):
+                        progress(done, total)
 
-                stylize_frames(paths, self.stylizer, styled_dir, progress=report)
+                    with self.stylizer_lock:
+                        stylize_frames(paths, self.stylizer, styled_dir, progress=report)
                 pending = job / (name + suffix)
                 frames_to_video(styled_dir, pending, fps=source.fps)
             else:

@@ -1,6 +1,7 @@
 """Minimal synchronous client for the VTube Studio public WebSocket API."""
 import json
 import os
+import threading
 import uuid
 from pathlib import Path
 
@@ -19,7 +20,7 @@ class VTSClient:
     API_VERSION = "1.0"
 
     def __init__(self, url="ws://localhost:8001", plugin_name="Naiwa Booth",
-                 plugin_developer="AI PhotoBooth", token_path=None,
+                 plugin_developer="Naiwa - PhotoBooth", token_path=None,
                  timeout=8, socket_factory=None, connector=None):
         self.url = url
         self.plugin_name = plugin_name
@@ -29,6 +30,7 @@ class VTSClient:
         self.socket_factory = socket_factory
         self.connector = connector
         self.socket = None
+        self._lock = threading.RLock()
 
     @staticmethod
     def default_token_path():
@@ -36,16 +38,17 @@ class VTSClient:
         return base / "AIPhotoBooth" / "vts_token.txt"
 
     def connect(self):
-        if self.socket is not None:
-            return
-        self.socket = self._connect_socket()
-        if hasattr(self.socket, "settimeout"):
-            self.socket.settimeout(self.timeout)
-        try:
-            self.authenticate()
-        except Exception:
-            self.close()
-            raise
+        with self._lock:
+            if self.socket is not None:
+                return
+            self.socket = self._connect_socket()
+            if hasattr(self.socket, "settimeout"):
+                self.socket.settimeout(self.timeout)
+            try:
+                self.authenticate()
+            except Exception:
+                self.close()
+                raise
 
     def _connect_socket(self):
         if self.socket_factory:
@@ -61,7 +64,7 @@ class VTSClient:
 
     def _send(self, message_type, data=None):
         if self.socket is None:
-            self.socket = self._connect_socket()
+            raise RuntimeError("VTube Studio API 尚未连接")
         request_id = uuid.uuid4().hex
         request = {
             "apiName": self.API_NAME,
@@ -136,13 +139,30 @@ class VTSClient:
             pass
 
     def request(self, message_type, data=None):
-        return self._send(message_type, data).get("data", {})
+        with self._lock:
+            self.connect()
+            try:
+                return self._send(message_type, data).get("data", {})
+            except VTSAPIError:
+                raise
+            except Exception:
+                self.close()
+                self.connect()
+                return self._send(message_type, data).get("data", {})
 
     def get_api_state(self):
         return self.request("APIStateRequest")
 
     def get_current_model(self):
         return self.request("CurrentModelRequest")
+
+    def get_available_models(self):
+        return self.request("AvailableModelsRequest")
+
+    def load_model(self, model_id):
+        if not isinstance(model_id, str) or not model_id.strip():
+            raise ValueError("模型 ID 不能为空")
+        return self.request("ModelLoadRequest", {"modelID": model_id})
 
     def get_hotkeys(self):
         model = self.get_current_model()
@@ -153,11 +173,12 @@ class VTSClient:
         return self.request("HotkeyTriggerRequest", {"hotkeyID": hotkey_id})
 
     def close(self):
-        if self.socket is not None:
-            try:
-                self.socket.close()
-            finally:
-                self.socket = None
+        with self._lock:
+            if self.socket is not None:
+                try:
+                    self.socket.close()
+                finally:
+                    self.socket = None
 
     def __enter__(self):
         self.connect()
