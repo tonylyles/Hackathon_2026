@@ -6,8 +6,24 @@ OUTPUT_DIR = ROOT / "output"          # 生成的作品（图片/视频）
 FRAME_DIR = ROOT / "assets" / "frames"
 BGM_DIR = ROOT / "assets" / "bgm"
 
-CAMERA_INDEX = 1          # 0=笔记本内置，1=Camo(iPhone)——实测以 brightness_probe.py 输出为准
-CAMERA_W, CAMERA_H = 1280, 720
+CAMERA_INDEX = 0          # 当前 MSMF 下有画面的摄像头；设备顺序变化时请重新探测
+CAMERA_BACKEND = "MSMF"  # 本机实测：DSHOW 读到黑帧，MSMF index=0 有真实画面
+CAMERA_W, CAMERA_H = 1920, 1080  # 请求目标；实际帧尺寸以设备返回为准
+
+# VTube Studio public WebSocket API (enable in VTS settings).
+VTS_API_URL = "ws://localhost:8001"
+VTS_PLUGIN_NAME = "Naiwa Booth"
+VTS_PLUGIN_DEVELOPER = "Naiwa - PhotoBooth"
+VTS_TIMEOUT_SECONDS = 8
+VTS_AUTO_LAUNCH = True  # Steam VTube Studio; manual install and API authorization still required
+VTS_STARTUP_TIMEOUT_SECONDS = 30
+VTS_RETRY_INTERVAL_SECONDS = 3
+VTS_CAMERA_INDEX = 2  # VTubeStudioCam virtual webcam; confirm on each host.
+VTS_CAMERA_BACKEND = "DSHOW"  # Windows virtual camera capture backend.
+VTS_CAMERA_W, VTS_CAMERA_H = 1920, 1080  # 设备不支持时保留原生 1280×720
+VTS_PREVIEW_ENABLED = False  # 普通展台默认显示真人；VTS 仅通过 --vts-preview 显式启用
+VTS_FRAME_MAX_AGE = 0.65
+BACKGROUND_DIR = ROOT / "assets" / "backgrounds"
 
 # 推理设置
 DEVICE = "cuda"            # cuda | cpu
@@ -16,6 +32,8 @@ REALTIME_SIZE = 256        # 模式 A 实时推理分辨率（实测 256px fp16 
                            # ↑ cuDNN 对 Blackwell(sm_120) 的卷积内核尚不成熟，等 TensorRT/新版本再上 512
 REALTIME_TARGET_FPS = 30
 USE_HALF = True            # fp16
+SHARPEN = True             # 显示前锐化（补偿 256px 放大的模糊感）
+DISPLAY_W, DISPLAY_H = 1280, 720
 
 # 模式 B
 RECORD_SECONDS = 4

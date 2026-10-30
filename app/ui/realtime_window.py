@@ -43,6 +43,11 @@ class RealtimeWindow:
                     out = frame
             acc["stylize"] += time.perf_counter() - t1
             t2 = time.perf_counter()
+            if show_styled:
+                # 放大到显示分辨率 + 锐化（补偿 256px 推理的软感）
+                out = cv2.resize(out, (1280, 720), interpolation=cv2.INTER_CUBIC)
+                blur = cv2.GaussianBlur(out, (0, 0), 2.0)
+                out = cv2.addWeighted(out, 1.5, blur, -0.5, 0)
 
             now = time.perf_counter()
             self.fps = 0.9 * self.fps + 0.1 * (1 / max(1e-6, now - last))
@@ -50,9 +55,9 @@ class RealtimeWindow:
             self._hud(out)
             acc["show"] += time.perf_counter() - t2
 
-            cv2.namedWindow("AI PhotoBooth", cv2.WINDOW_NORMAL)
-            cv2.setWindowProperty("AI PhotoBooth", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
-            cv2.imshow("AI PhotoBooth", out)
+            cv2.namedWindow("Naiwa - PhotoBooth", cv2.WINDOW_NORMAL)
+            cv2.setWindowProperty("Naiwa - PhotoBooth", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+            cv2.imshow("Naiwa - PhotoBooth", out)
             # pollKey 非阻塞且不引入 waitKey(1) 在 Windows 上的 ~15ms 挂起
             key = cv2.pollKey() & 0xFF
             if key == ord('q'):

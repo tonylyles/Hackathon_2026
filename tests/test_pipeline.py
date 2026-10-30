@@ -68,6 +68,8 @@ class PipelineTests(unittest.TestCase):
                     response = client.get(url)
                     self.assertEqual(response.status_code, 200)
                     self.assertEqual(response.content, out.read_bytes())
+                for name in ("test.py", "../test_pipeline.py", "..\\test_pipeline.py"):
+                    self.assertEqual(client.get(f"/api/download/{name}").status_code, 404)
         finally:
             out.unlink(missing_ok=True)
 
