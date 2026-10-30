@@ -1,7 +1,8 @@
 # Naiwa - PhotoBooth 📸
 
 > 2026 秋季 AI 黑客松参赛项目｜中期检查点与公开作品资料草案
-> 当前方向：以 VTube Studio Live2D 角色为主角的互动大头贴展台。
+> 当前方向：以 VTube Studio Live2D 角色为主角的互动大头贴展台（优先路线）。
+> 早期 AnimeGANv2/PyTorch 实时风格化路线实测未达到预期效果，仅作为保留的技术支线，不是本项目的主打体验。
 
 **项目现状：**拍照展台、照片生成和局域网扫码取件已跑通；VTube Studio 手机面捕能驱动角色，桌面端 API 已开启。VTubeStudioCam 尚未被本项目成功读取，当前拍照/录像仍来自普通摄像头，因此“用 Live2D 角色画面生成并扫码取件”的完整体验仍待打通和验收。
 
@@ -43,7 +44,7 @@ VTube Studio 为第三方商业软件（Steam 免费），受其用户协议保�
 3. 首次启动 VTube Studio 后，在其设置中开启「Public API（插件接口）」与虚拟摄像头（VTubeStudioCam），加载 Live2D 模型并连接手机面捕（iOS 需安装 VTube Studio 手机端）。
 4. 展台启动时会自动通过 Steam 拉起 VTube Studio（见 `app/core/vts_launcher.py` 与 `steam_appid.txt`）；首次连接时需在 VTube Studio 内确认插件授权弹窗。
 
-仓库同样不分发 Live2D 模型文件：演示所用模型请按权利人许可自行获取，授权不明的文件请勿提交到本仓库（详见 `docs/建模素材指引.md`）。
+仓库同样不分发 Live2D 模型文件：演示所用的奶蛙、牛来、肥嘟嘟等模型均需用户按权利人许可单独下载获取，授权不明的文件请勿提交到本仓库（详见 `docs/建模素材指引.md`）。当前演示视频仅在本地环境实现和录制，仓库不提供公开在线演示。
 
 ## 开发与试运行
 
@@ -79,6 +80,7 @@ python -m unittest discover -s tests -v
 
 ## 已知限制与验收边界
 
+- 奶蛙、牛来等 Live2D 模型不随仓库分发，需用户按权利人许可单独下载；演示视频仅在本地环境实现，无公开在线演示。
 - 目前确认展台照片结果可生成并显示扫码取件页；不据此推断录像取件或 VTS 成片已通过实机完整验收。
 - VTubeStudioCam 尚未读出有效帧；普通摄像头拍摄仍是现有作品输入。
 - `mock` 是无模型流程/画面测试，不是 AI 风格化，也不代表 PyTorch/CUDA 推理已验收。
