@@ -34,6 +34,17 @@
 - **技术说明：**Python、OpenCV 桌面展台、VTube Studio API/虚拟摄像头接入探索、局域网二维码取件。仓库还保留旧 AnimeGANv2/PyTorch 与视频处理路径；它们不代表当前 VTS 方案已完成，也不应宣传为核心成果。
 - **AI 使用与素材：**Live2D 角色和模型素材须按各自授权条款使用；未经明确再分发许可的模型文件不随代码仓库公开。面捕、模型和演示素材的具体来源/授权需在最终公开前逐项核对。
 
+## 准备 VTube Studio（虚拟形象模式必需）
+
+VTube Studio 为第三方商业软件（Steam 免费），受其用户协议保护，**本仓库不分发其安装包**，请从官方渠道获取：
+
+1. 安装 Steam：https://store.steampowered.com/about/
+2. 在 Steam 安装 VTube Studio：https://store.steampowered.com/app/1325860/VTube_Studio/
+3. 首次启动 VTube Studio 后，在其设置中开启「Public API（插件接口）」与虚拟摄像头（VTubeStudioCam），加载 Live2D 模型并连接手机面捕（iOS 需安装 VTube Studio 手机端）。
+4. 展台启动时会自动通过 Steam 拉起 VTube Studio（见 `app/core/vts_launcher.py` 与 `steam_appid.txt`）；首次连接时需在 VTube Studio 内确认插件授权弹窗。
+
+仓库同样不分发 Live2D 模型文件：演示所用模型请按权利人许可自行获取，授权不明的文件请勿提交到本仓库（详见 `docs/建模素材指引.md`）。
+
 ## 开发与试运行
 
 VTube Studio 路线不使用 PyTorch 风格化推理；仓库仍保留旧 AnimeGANv2/PyTorch 真人摄像头模式。安装依赖后，双击 `启动照相亭.bat` 默认进入 **VTS 角色拍摄**（不会回退到真人摄像头或本地 torch）；也可以在终端启动：
