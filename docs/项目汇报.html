@@ -6,321 +6,319 @@
 <title>AI PhotoBooth · AI 大头贴 — 项目汇报</title>
 <style>
   :root{
-    --bg:#0b0e17;
-    --bg2:#111527;
-    --card:rgba(255,255,255,.04);
-    --card-brd:rgba(255,255,255,.10);
-    --txt:#e8ecf6;
-    --muted:#9aa3b8;
-    --cyan:#4cc9f0;
-    --purple:#b249f8;
-    --pink:#ff5c9d;
-    --green:#2ee6a8;
-    --amber:#ffc857;
-    --red:#ff6b6b;
-    --grad:linear-gradient(135deg,#4cc9f0 0%,#b249f8 50%,#ff5c9d 100%);
-    --shadow:0 20px 60px rgba(0,0,0,.45);
+    --bg:#070910;
+    --ink:#f2f5ff;
+    --muted:#aeb6cc;
+    --cyan:#63d3ff;
+    --purple:#c37bff;
+    --pink:#ff6fae;
+    --gold:#ffd479;
+    --green:#46e6b0;
+    --card:rgba(12,16,28,.74);
+    --brd:rgba(255,255,255,.14);
+    --grad:linear-gradient(120deg,#63d3ff 0%,#c37bff 48%,#ff6fae 100%);
   }
   *{margin:0;padding:0;box-sizing:border-box}
   html{scroll-behavior:smooth}
   body{
+    background:var(--bg);
+    color:var(--ink);
     font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
-    background:
-      radial-gradient(1200px 600px at 15% -10%, rgba(178,73,248,.18), transparent 60%),
-      radial-gradient(1000px 600px at 85% 0%, rgba(76,201,240,.16), transparent 55%),
-      radial-gradient(900px 700px at 50% 110%, rgba(255,92,157,.12), transparent 60%),
-      var(--bg);
-    color:var(--txt);
-    line-height:1.7;
+    line-height:1.75;
     -webkit-font-smoothing:antialiased;
   }
-  a{color:var(--cyan);text-decoration:none}
+  code{font-family:"Cascadia Code",Consolas,monospace;background:rgba(255,255,255,.08);padding:1px 6px;border-radius:5px;font-size:.9em}
 
-  /* ---------- nav ---------- */
+  /* ---------- 顶部导航 ---------- */
   nav{
-    position:fixed;top:0;left:0;right:0;z-index:100;
-    display:flex;align-items:center;gap:6px;
-    padding:12px 28px;
-    background:rgba(11,14,23,.7);
-    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
-    border-bottom:1px solid var(--card-brd);
+    position:fixed;top:0;left:0;right:0;z-index:50;
+    display:flex;align-items:center;gap:4px;
+    padding:12px 30px;
+    background:rgba(6,8,15,.55);
+    backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+    border-bottom:1px solid rgba(255,255,255,.08);
   }
-  nav .logo{font-weight:800;letter-spacing:.5px;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;margin-right:auto;font-size:17px}
-  nav a.navlink{color:var(--muted);font-size:13.5px;padding:7px 13px;border-radius:9px;transition:.2s}
-  nav a.navlink:hover{color:var(--txt);background:var(--card)}
+  nav .brand{font-weight:800;font-size:16px;letter-spacing:.5px;margin-right:auto;
+    background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  nav a{color:var(--muted);font-size:13.5px;padding:7px 13px;border-radius:8px;transition:.2s}
+  nav a:hover{color:#fff;background:rgba(255,255,255,.09)}
 
-  .wrap{max-width:1180px;margin:0 auto;padding:0 28px}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 28px;position:relative;z-index:2}
 
-  /* ---------- hero ---------- */
+  /* ---------- 全幅背景区 ---------- */
+  .sec{
+    position:relative;
+    padding:96px 0;
+    background-color:#080b13;
+    background-position:center;
+    background-size:cover;
+    background-repeat:no-repeat;
+  }
+  .sec::before{
+    content:"";position:absolute;inset:0;
+    background:linear-gradient(180deg,rgba(9,12,20,.38) 0%,rgba(9,12,20,.52) 45%,rgba(9,12,20,.66) 100%);
+  }
+
+  /* 原画背景分配（可复用，靠 position 错开裁切避免重复感） */
+  #overview{background-image:url("assets/bg2.jpg");background-position:50% 30%}
+  #modes{background-image:url("assets/bg3.jpg");background-position:50% 40%}
+  #tech{background-image:url("assets/bg4.jpg");background-position:50% 35%}
+  #structure{background-image:url("assets/bg1.jpg");background-position:30% 50%}
+  #accept{background-image:url("assets/bg3.jpg");background-position:60% 60%}
+  #team{background-image:url("assets/bg1.jpg");background-position:50% 65%}
+  #risk{background-image:url("assets/bg2.jpg");background-position:70% 50%}
+
+  /* ---------- Hero ---------- */
   header{
-    padding:150px 0 90px;text-align:center;position:relative;overflow:hidden;
+    min-height:100vh;
+    display:flex;align-items:center;justify-content:center;text-align:center;
+    position:relative;
+    background:
+      radial-gradient(900px 500px at 50% 30%, rgba(6,8,14,.10), rgba(6,8,14,.32) 70%),
+      linear-gradient(180deg, rgba(6,8,14,.20) 0%, rgba(6,8,14,.42) 42%, rgba(6,8,14,.90) 82%, var(--bg) 100%),
+      url("assets/bg1.jpg");
+    background-position:center,center,center;
+    background-size:cover,cover,cover;
   }
-  header .kicker{
-    display:inline-flex;align-items:center;gap:8px;
-    font-size:13px;letter-spacing:2px;color:var(--muted);
-    border:1px solid var(--card-brd);border-radius:999px;padding:7px 16px;
-    background:var(--card);margin-bottom:26px;
+  header .inner{position:relative;z-index:2;padding:120px 24px 60px;max-width:1000px}
+  .kicker{
+    display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;
+    font-size:12.5px;letter-spacing:2px;color:var(--muted);
+    border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:8px 18px;
+    background:rgba(8,10,18,.45);backdrop-filter:blur(10px);margin-bottom:30px;
   }
-  header .kicker b{color:var(--cyan);font-weight:700}
+  .kicker b{color:var(--gold);font-weight:700;letter-spacing:1px}
   header h1{
-    font-size:clamp(40px,7vw,78px);font-weight:900;line-height:1.05;letter-spacing:-1px;
-    background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;
+    font-size:clamp(46px,8.5vw,96px);font-weight:900;line-height:1.02;letter-spacing:-2px;
+    text-shadow:0 8px 40px rgba(0,0,0,.55);
   }
-  header .sub{font-size:clamp(17px,2.6vw,23px);color:var(--muted);margin:20px 0 8px;font-weight:500}
-  header .slogan{font-size:16px;color:var(--txt)}
-  header .slogan em{color:var(--pink);font-style:normal;font-weight:700}
-  .badges{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:30px}
-  .badge{
-    font-size:13px;font-weight:600;padding:8px 15px;border-radius:999px;
-    border:1px solid var(--card-brd);background:var(--card);color:var(--txt);
+  header h1 .g{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 6px 30px rgba(195,123,255,.35))}
+  header .sub{
+    margin-top:22px;font-size:clamp(17px,2.6vw,23px);font-weight:500;
+    color:#e6ebff;text-shadow:0 2px 18px rgba(0,0,0,.7);
   }
-  .badge.hl{background:var(--grad);border:none;color:#fff}
+  header .sub em{font-style:normal;color:var(--gold);font-weight:800}
+  header .slogan{
+    margin-top:16px;font-size:15.5px;color:#c9d2ea;
+    text-shadow:0 2px 14px rgba(0,0,0,.8);
+  }
+  .hero-pills{margin-top:34px;display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+  .pill{
+    font-size:13px;font-weight:600;padding:9px 16px;border-radius:999px;
+    border:1px solid rgba(255,255,255,.18);background:rgba(8,10,18,.5);
+    backdrop-filter:blur(8px);color:#e8ecff;
+  }
+  .pill.hl{background:var(--grad);border:none;color:#0a0d16;font-weight:800}
+  .scroll-hint{position:absolute;bottom:26px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.6);font-size:12px;letter-spacing:2px;z-index:2}
 
-  /* ---------- sections ---------- */
-  section{padding:70px 0}
-  .sec-tag{
-    display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;
-    letter-spacing:2.5px;text-transform:uppercase;color:var(--cyan);margin-bottom:14px;
-  }
-  .sec-tag::before{content:"";width:26px;height:2px;background:var(--grad);border-radius:2px}
-  h2{font-size:clamp(26px,4vw,38px);font-weight:800;letter-spacing:-.5px;margin-bottom:14px}
-  .lead{color:var(--muted);font-size:16.5px;max-width:820px;margin-bottom:38px}
+  /* ---------- 标题 ---------- */
+  .tag{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:800;letter-spacing:2.5px;color:var(--cyan);margin-bottom:12px}
+  .tag::before{content:"";width:26px;height:2px;background:var(--grad);border-radius:2px}
+  h2{font-size:clamp(27px,4vw,40px);font-weight:900;letter-spacing:-.5px;line-height:1.15;margin-bottom:14px;text-shadow:0 3px 22px rgba(0,0,0,.75)}
+  .lead{color:#c3cbe1;font-size:16.5px;max-width:860px;margin-bottom:34px;text-shadow:0 2px 14px rgba(0,0,0,.8)}
 
-  /* cards */
-  .grid{display:grid;gap:20px}
+  /* ---------- 网格/卡片 ---------- */
+  .grid{display:grid;gap:18px}
+  .g2{grid-template-columns:repeat(2,1fr)}
   .g3{grid-template-columns:repeat(3,1fr)}
   .g4{grid-template-columns:repeat(4,1fr)}
-  .g2{grid-template-columns:repeat(2,1fr)}
-  @media(max-width:900px){.g3,.g4,.g2{grid-template-columns:1fr}}
+  @media(max-width:920px){.g2,.g3,.g4{grid-template-columns:1fr}}
+
   .card{
-    background:var(--card);border:1px solid var(--card-brd);border-radius:18px;
-    padding:26px;position:relative;overflow:hidden;transition:.25s;
+    background:var(--card);
+    border:1px solid var(--brd);
+    border-radius:18px;
+    padding:26px;
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    transition:.25s;position:relative;overflow:hidden;
   }
-  .card:hover{transform:translateY(-4px);border-color:rgba(255,255,255,.22);box-shadow:var(--shadow)}
-  .card h3{font-size:19px;margin-bottom:10px;font-weight:700}
+  .card:hover{transform:translateY(-5px);border-color:rgba(255,255,255,.3);box-shadow:0 24px 70px rgba(0,0,0,.55)}
+  .card h3{font-size:19px;font-weight:800;margin-bottom:9px;color:#fff}
   .card p{color:var(--muted);font-size:14.5px}
-  .card .num{
-    font-size:13px;font-weight:800;color:var(--cyan);letter-spacing:1px;margin-bottom:12px;
-  }
-  .icon{width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:23px;margin-bottom:16px;background:var(--grad)}
-  .chip{
-    display:inline-block;font-size:12px;font-weight:700;padding:4px 11px;border-radius:999px;
-    margin:10px 6px 0 0;border:1px solid var(--card-brd);color:var(--txt);background:rgba(255,255,255,.05);
-  }
-  .chip.cyan{color:var(--cyan);border-color:rgba(76,201,240,.35)}
-  .chip.purple{color:var(--purple);border-color:rgba(178,73,248,.35)}
-  .chip.pink{color:var(--pink);border-color:rgba(255,92,157,.35)}
-  .chip.green{color:var(--green);border-color:rgba(46,230,168,.35)}
+  .card .icon{font-size:26px;margin-bottom:14px;display:inline-block}
+  .num{font-size:12.5px;font-weight:800;letter-spacing:1.2px;color:var(--gold);margin-bottom:10px}
 
-  /* comparison table */
-  table{width:100%;border-collapse:collapse;font-size:14.5px;border-radius:16px;overflow:hidden}
-  th,td{padding:15px 18px;text-align:left;border-bottom:1px solid var(--card-brd)}
-  th{background:rgba(255,255,255,.06);font-weight:700;color:var(--txt);white-space:nowrap}
-  td{color:var(--muted);background:rgba(255,255,255,.02)}
+  .chip{display:inline-block;font-size:12px;font-weight:700;padding:4px 11px;border-radius:999px;margin:10px 6px 0 0;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);color:#e6ebff}
+  .chip.c{color:var(--cyan);border-color:rgba(99,211,255,.4)}
+  .chip.p{color:var(--purple);border-color:rgba(195,123,255,.4)}
+  .chip.k{color:var(--pink);border-color:rgba(255,111,174,.4)}
+  .chip.g{color:var(--green);border-color:rgba(70,230,176,.4)}
+
+  /* ---------- 表格 ---------- */
+  .tbl-wrap{border-radius:16px;overflow:hidden;border:1px solid var(--brd)}
+  table{width:100%;border-collapse:collapse;font-size:14.5px;background:rgba(10,13,24,.76);backdrop-filter:blur(10px)}
+  th,td{padding:15px 18px;text-align:left;border-bottom:1px solid rgba(255,255,255,.09);vertical-align:top}
+  th{background:rgba(255,255,255,.07);font-weight:800;color:#fff;white-space:nowrap;font-size:13.5px;letter-spacing:.4px}
+  td{color:var(--muted)}
+  td b{color:#fff}
   tr:last-child td{border-bottom:none}
-  .hl-col{background:linear-gradient(180deg,rgba(178,73,248,.14),rgba(255,92,157,.10)) !important}
-  .hl-col td{color:var(--txt)}
-  td b{color:var(--txt)}
+  .hl-col{background:linear-gradient(180deg,rgba(195,123,255,.16),rgba(255,111,174,.11))}
+  .hl-col td{color:#f3f0ff}
 
-  /* status badges */
-  .st{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;padding:4px 11px;border-radius:999px}
-  .st.pass{background:rgba(46,230,168,.14);color:var(--green);border:1px solid rgba(46,230,168,.35)}
-  .st.warn{background:rgba(255,200,87,.14);color:var(--amber);border:1px solid rgba(255,200,87,.35)}
-  .st.pend{background:rgba(255,107,107,.14);color:var(--red);border:1px solid rgba(255,107,107,.35)}
-  .st.info{background:rgba(76,201,240,.14);color:var(--cyan);border:1px solid rgba(76,201,240,.35)}
-  .dot{width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block}
+  /* ---------- 状态 ---------- */
+  .st{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:800;padding:4px 11px;border-radius:999px;white-space:nowrap}
+  .st.pass{background:rgba(70,230,176,.14);color:var(--green);border:1px solid rgba(70,230,176,.4)}
+  .st.warn{background:rgba(255,212,121,.14);color:var(--gold);border:1px solid rgba(255,212,121,.4)}
+  .st.pend{background:rgba(255,111,174,.14);color:var(--pink);border:1px solid rgba(255,111,174,.4)}
+  .dot{width:7px;height:7px;border-radius:50%;background:currentColor}
 
-  /* pipeline */
-  .pipeline{display:flex;flex-wrap:wrap;align-items:stretch;gap:0;justify-content:center}
-  .pipe-step{
-    flex:1 1 150px;min-width:120px;background:var(--card);border:1px solid var(--card-brd);
-    border-radius:14px;padding:18px 14px;text-align:center;position:relative;
-  }
-  .pipe-step .pn{font-size:11px;font-weight:800;letter-spacing:1px;color:var(--cyan);margin-bottom:6px}
-  .pipe-step .pt{font-size:14px;font-weight:700}
-  .pipe-step .pd{font-size:12px;color:var(--muted);margin-top:5px}
-  .pipe-arrow{display:flex;align-items:center;color:var(--muted);font-size:20px;padding:0 8px}
+  /* ---------- 流水线 ---------- */
+  .pipeline{display:flex;flex-wrap:wrap;align-items:stretch;justify-content:center;gap:0}
+  .pstep{flex:1 1 150px;min-width:118px;background:var(--card);border:1px solid var(--brd);border-radius:14px;padding:18px 14px;text-align:center;backdrop-filter:blur(12px)}
+  .pstep.hot{border-color:rgba(195,123,255,.6);background:rgba(195,123,255,.13);box-shadow:0 0 40px rgba(195,123,255,.18)}
+  .pstep .pn{font-size:11px;font-weight:800;letter-spacing:1px;color:var(--cyan);margin-bottom:6px}
+  .pstep.hot .pn{color:var(--purple)}
+  .pstep .pt{font-size:14px;font-weight:800;color:#fff}
+  .pstep .pd{font-size:12px;color:var(--muted);margin-top:4px}
+  .parr{display:flex;align-items:center;color:rgba(255,255,255,.4);font-size:20px;padding:0 8px}
 
-  /* timeline */
-  .timeline{position:relative;margin:20px 0 0 8px;padding-left:30px}
-  .timeline::before{content:"";position:absolute;left:8px;top:6px;bottom:6px;width:2px;background:var(--grad)}
-  .tl-item{position:relative;margin-bottom:24px}
-  .tl-item::before{content:"";position:absolute;left:-29px;top:7px;width:14px;height:14px;border-radius:50%;background:var(--grad);border:3px solid var(--bg)}
-  .tl-date{font-size:13px;font-weight:800;color:var(--cyan);letter-spacing:.5px}
-  .tl-text{font-size:15px;color:var(--txt);margin-top:2px}
-  .tl-note{font-size:13px;color:var(--muted)}
+  /* ---------- 时间线 ---------- */
+  .timeline{position:relative;margin:18px 0 0 10px;padding-left:32px}
+  .timeline::before{content:"";position:absolute;left:9px;top:6px;bottom:6px;width:2px;background:var(--grad)}
+  .tl{position:relative;margin-bottom:24px}
+  .tl::before{content:"";position:absolute;left:-29px;top:8px;width:14px;height:14px;border-radius:50%;background:var(--grad);border:3px solid #0a0d16;box-shadow:0 0 0 2px rgba(195,123,255,.3)}
+  .tl .d{font-size:13px;font-weight:800;color:var(--cyan);letter-spacing:.5px}
+  .tl .t{font-size:15px;color:#e9edff;margin-top:2px}
 
-  /* code / structure */
+  /* ---------- 代码块 ---------- */
   pre{
-    background:#0a0d16;border:1px solid var(--card-brd);border-radius:14px;
+    background:rgba(5,8,15,.82);border:1px solid var(--brd);border-radius:14px;
     padding:20px 22px;overflow:auto;font-size:13px;line-height:1.65;
     font-family:"Cascadia Code","JetBrains Mono",Consolas,monospace;color:#cdd6f4;
+    backdrop-filter:blur(10px);
   }
-  pre .cm{color:#6c7590}
+  pre .cm{color:#6d7690}
   pre .dir{color:var(--cyan)}
-  pre .fl{color:#c8d3f5}
   pre .hl{color:var(--pink);font-weight:700}
 
-  .callout{
-    border-left:3px solid var(--cyan);background:rgba(76,201,240,.08);
-    border-radius:0 12px 12px 0;padding:16px 20px;margin:18px 0;font-size:14.5px;
-  }
+  .callout{border-left:3px solid var(--cyan);background:rgba(99,211,255,.09);border-radius:0 12px 12px 0;padding:15px 20px;margin:18px 0;font-size:14.5px;color:#dde5fb}
   .callout b{color:var(--cyan)}
 
-  footer{padding:50px 0 70px;text-align:center;color:var(--muted);font-size:13.5px;border-top:1px solid var(--card-brd);margin-top:20px}
-  footer a{color:var(--muted);border-bottom:1px dotted var(--muted)}
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  @media(max-width:920px){.split{grid-template-columns:1fr}}
+
+  footer{padding:56px 0 72px;text-align:center;font-size:13px;color:#b7c0d6;border-top:1px solid rgba(255,255,255,.12);
+    background:linear-gradient(180deg,rgba(7,9,16,.80),rgba(7,9,16,.90)),url("assets/bg3.jpg") center 45%/cover no-repeat}
+  footer a{color:#aab4d4;border-bottom:1px dotted rgba(170,180,212,.5)}
   footer a:hover{color:var(--cyan)}
-
-  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-  @media(max-width:900px){.two-col{grid-template-columns:1fr}}
-
-  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
-  .float{animation:float 5s ease-in-out infinite}
 </style>
 </head>
 <body>
 
 <nav>
-  <span class="logo">AI PhotoBooth 📸✨</span>
-  <a class="navlink" href="#overview">项目简介</a>
-  <a class="navlink" href="#modes">三种模式</a>
-  <a class="navlink" href="#tech">技术架构</a>
-  <a class="navlink" href="#accept">验收记录</a>
-  <a class="navlink" href="#team">团队与排期</a>
-  <a class="navlink" href="#risk">风险预案</a>
+  <span class="brand">AI PhotoBooth 📸</span>
+  <a href="#overview">简介</a>
+  <a href="#modes">三种模式</a>
+  <a href="#tech">技术架构</a>
+  <a href="#accept">验收</a>
+  <a href="#team">分工排期</a>
+  <a href="#risk">风险</a>
 </nav>
 
+<!-- ==================== HERO（背景：bg1 云端神殿） ==================== -->
 <header>
-  <div class="wrap">
-    <div class="kicker">2026 秋季 AI 黑客松 · 华南师范大学人工智能创新协会 · <b>mock-acceptance-1021</b></div>
-    <h1>AI 大头贴<br>PhotoBooth</h1>
-    <p class="sub">把路人变成「动漫主角」，一键生成带 BGM 的短视频</p>
-    <p class="slogan">一台 <em>「用 AI 把你变成动画角色」</em> 的即时拍照录像机 —— 拍静态是基础，<em>拍动态是灵魂</em>。</p>
-    <div class="badges">
-      <span class="badge hl">🎯 实时风格化 + 短视频生成</span>
-      <span class="badge">赛道：新媒体与智能体 / 综合</span>
-      <span class="badge">PyTorch cu128 · RTX 5070</span>
-      <span class="badge">纯本地 · 局域网扫码带走</span>
+  <div class="inner">
+    <div class="kicker">2026 秋季 AI 黑客松 · 华南师大 AI 创新协会 · <b>mock-acceptance-1021</b></div>
+    <h1>AI 大头贴<br><span class="g">PhotoBooth</span></h1>
+    <p class="sub">把路人变成「动漫主角」，<em>一键生成带 BGM 的短视频</em></p>
+    <p class="slogan">一台用 AI 把你变成动画角色的即时拍照录像机 —— 拍静态是基础，拍动态是灵魂。</p>
+    <div class="hero-pills">
+      <span class="pill hl">🎯 实时风格化 + 短视频生成</span>
+      <span class="pill">赛道：新媒体与智能体 / 综合</span>
+      <span class="pill">PyTorch cu128 · RTX 5070</span>
+      <span class="pill">纯本地 · 局域网扫码带走</span>
     </div>
   </div>
+  <div class="scroll-hint">▾ 向下滚动</div>
 </header>
 
-<!-- ============ 概览 ============ -->
-<section id="overview">
+<!-- ==================== 简介（背景：bg2 创世纪） ==================== -->
+<section class="sec" id="overview">
   <div class="wrap">
-    <div class="sec-tag">Overview</div>
+    <div class="tag">Overview</div>
     <h2>这是什么？</h2>
-    <p class="lead">
-      <b>AI 大头贴 = 传统机器大头贴 × AI 实时风格化 + AI 短视频生成。</b>
+    <p class="lead"><b>AI 大头贴 = 传统机器大头贴 × AI 实时风格化 + AI 短视频生成。</b>
       路人站到摄像头前，屏幕里实时出现「动漫版的你」（跳舞、做鬼脸都同步）；按下按钮录制 3~5 秒动作，
-      约 1 分钟后得到一支<b>带 BGM 的动漫风短视频</b>，扫码即可带走发朋友圈。
-    </p>
+      约 1 分钟后得到一支<b>带 BGM 的动漫风短视频</b>，扫码即可带走发朋友圈。</p>
 
-    <table>
-      <thead>
-        <tr><th></th><th>美颜滤镜</th><th>静态 AI 大头贴</th><th class="hl-col">我们的动态版</th></tr>
-      </thead>
-      <tbody>
-        <tr><td><b>原理</b></td><td>原照片调色</td><td>扩散模型重绘单张</td><td class="hl-col"><b>实时风格化视频流 + 逐帧重绘短视频</b></td></tr>
-        <tr><td><b>产出</b></td><td>还是原照片</td><td>一张图</td><td class="hl-col"><b>一支 MP4 短视频</b></td></tr>
-        <tr><td><b>现场效果</b></td><td>无感</td><td>看一眼</td><td class="hl-col"><b>大屏上「动画版的你」跟你同步跳舞</b></td></tr>
-      </tbody>
-    </table>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th></th><th>美颜滤镜</th><th>静态 AI 大头贴</th><th class="hl-col">我们的动态版</th></tr></thead>
+        <tbody>
+          <tr><td><b>原理</b></td><td>原照片调色</td><td>扩散模型重绘单张</td><td class="hl-col"><b>实时风格化视频流 + 逐帧重绘短视频</b></td></tr>
+          <tr><td><b>产出</b></td><td>还是原照片</td><td>一张图</td><td class="hl-col"><b>一支 MP4 短视频</b></td></tr>
+          <tr><td><b>现场效果</b></td><td>无感</td><td>看一眼</td><td class="hl-col"><b>大屏上「动画版的你」跟你同步跳舞</b></td></tr>
+        </tbody>
+      </table>
+    </div>
 
-    <div class="grid g4" style="margin-top:26px">
-      <div class="card">
-        <div class="num">WHY 01</div>
-        <h3>现场传播力最强</h3>
-        <p>视频比图片更易刷屏，宣发与「最佳人气奖」双收。</p>
-      </div>
-      <div class="card">
-        <div class="num">WHY 02</div>
-        <h3>围观即展位</h3>
-        <p>实时动漫化大屏本身就是吸睛装置，路过必停。</p>
-      </div>
-      <div class="card">
-        <div class="num">WHY 03</div>
-        <h3>技术完整度高</h3>
-        <p>实时 CV 推理 + 生成模型优化（TensorRT）+ 视频工程 + Web 服务。</p>
-      </div>
-      <div class="card">
-        <div class="num">WHY 04</div>
-        <h3>演示零门槛</h3>
-        <p>不用解释，站上去 10 秒就被效果说服。</p>
-      </div>
+    <div class="grid g4" style="margin-top:24px">
+      <div class="card"><div class="num">WHY 01</div><h3>现场传播力最强</h3><p>视频比图片更易刷屏，宣发与「最佳人气奖」双收。</p></div>
+      <div class="card"><div class="num">WHY 02</div><h3>围观即展位</h3><p>实时动漫化大屏本身就是吸睛装置，路过必停。</p></div>
+      <div class="card"><div class="num">WHY 03</div><h3>技术完整度高</h3><p>实时 CV 推理 + 生成模型优化（TensorRT）+ 视频工程 + Web 服务。</p></div>
+      <div class="card"><div class="num">WHY 04</div><h3>演示零门槛</h3><p>不用解释，站上去 10 秒就被效果说服。</p></div>
     </div>
   </div>
 </section>
 
-<!-- ============ 三种模式 ============ -->
-<section id="modes">
+<!-- ==================== 三种模式（背景：bg3 圣容） ==================== -->
+<section class="sec" id="modes">
   <div class="wrap">
-    <div class="sec-tag">Modes</div>
+    <div class="tag">Modes</div>
     <h2>三种模式 · 一套底座，三个皮肤</h2>
     <p class="lead">同一套采集 / 推理 / 合成底座，根据场景切换三种「皮肤」。</p>
 
     <div class="grid g3">
       <div class="card">
-        <div class="icon">🎥</div>
-        <div class="num">MODE A</div>
+        <div class="icon">🎥</div><div class="num">MODE A · 保底</div>
         <h3>实时风格化直播</h3>
         <p>摄像头画面逐帧实时变成动漫 / 赛博风格——你跳舞，屏幕里的「动画版你」同步跳。无人时大屏常驻此模式，本身就是吸睛装置。</p>
-        <span class="chip cyan">AnimeGANv2 逐帧</span>
-        <span class="chip">10~20ms/帧 · 30fps+</span>
-        <span class="chip green">必做 · 保底</span>
+        <span class="chip c">AnimeGANv2 逐帧</span><span class="chip">10~20ms/帧 · 30fps+</span><span class="chip g">必做</span>
       </div>
       <div class="card">
-        <div class="icon">⭐</div>
-        <div class="num">MODE B · 核心体验</div>
+        <div class="icon">⭐</div><div class="num">MODE B · 核心体验</div>
         <h3>录制动作 → 风格化短视频</h3>
         <p>按下按钮录 3~5 秒动作，约 1 分钟后得到带 BGM 的动漫风 MP4，局域网二维码带走。</p>
-        <span class="chip cyan">逐帧风格化批处理</span>
-        <span class="chip purple">RIFE / EbSynth 时序平滑</span>
-        <span class="chip pink">ffmpeg 合成 + BGM + Logo</span>
-        <span class="chip green">必做 · 核心加分</span>
+        <span class="chip c">逐帧批处理</span><span class="chip p">RIFE / EbSynth 平滑</span><span class="chip k">ffmpeg + BGM + Logo</span>
       </div>
       <div class="card">
-        <div class="icon">🎆</div>
-        <div class="num">MODE C</div>
+        <div class="icon">🎆</div><div class="num">MODE C · 彩蛋</div>
         <h3>真·生成式视频</h3>
         <p>用 AnimateDiff + ControlNet-OpenPose 生成「动画角色跟你做同样动作」的片段。单片段 2~5 分钟，不适合现场排队。</p>
-        <span class="chip purple">AnimateDiff</span>
-        <span class="chip purple">ControlNet-OpenPose</span>
-        <span class="chip">离线预生成 · 副屏轮播</span>
+        <span class="chip p">AnimateDiff</span><span class="chip p">ControlNet-OpenPose</span><span class="chip">离线预生成</span>
       </div>
     </div>
 
-    <div class="callout" style="margin-top:26px">
-      <b>模式 B 全链路：</b> 录制 3~5s（24fps，约 90 帧）→ 逐帧风格化（AnimeGANv2 / SD-Turbo 批处理）→
-      时序平滑（关键帧 + EbSynth 传播 / RIFE 补帧，消除闪烁）→ ffmpeg 合成 + BGM + 片尾 Logo → 输出 MP4 → 局域网二维码下载。
+    <div class="callout" style="margin-top:24px">
+      <b>模式 B 全链路：</b> 录制 3~5s（24fps，约 90 帧）→ 逐帧风格化 → 时序平滑（关键帧 + EbSynth 传播 / RIFE 补帧，消除闪烁）→ ffmpeg 合成 + BGM + 片尾 Logo → 输出 MP4 → 局域网二维码下载。
     </div>
   </div>
 </section>
 
-<!-- ============ 技术架构 ============ -->
-<section id="tech">
+<!-- ==================== 技术架构（背景：bg4 祈祷受光） ==================== -->
+<section class="sec" id="tech">
   <div class="wrap">
-    <div class="sec-tag">Architecture</div>
+    <div class="tag">Architecture</div>
     <h2>技术架构与「零延迟」核心</h2>
     <p class="lead">没有游戏引擎，全靠推理栈优化。延迟构成与对策：</p>
 
     <div class="pipeline">
-      <div class="pipe-step"><div class="pn">① 采集</div><div class="pt">摄像头</div><div class="pd">~30ms</div></div>
-      <div class="pipe-arrow">→</div>
-      <div class="pipe-step"><div class="pn">② 分割</div><div class="pt">人像分割</div><div class="pd">~10ms</div></div>
-      <div class="pipe-arrow">→</div>
-      <div class="pipe-step" style="border-color:rgba(178,73,248,.45);background:rgba(178,73,248,.08)"><div class="pn" style="color:var(--purple)">③ 风格化（瓶颈）</div><div class="pt">推理引擎</div><div class="pd">10~100ms</div></div>
-      <div class="pipe-arrow">→</div>
-      <div class="pipe-step"><div class="pn">④ 上屏</div><div class="pt">显示</div><div class="pd">~16ms</div></div>
+      <div class="pstep"><div class="pn">① 采集</div><div class="pt">摄像头</div><div class="pd">~30ms</div></div>
+      <div class="parr">→</div>
+      <div class="pstep"><div class="pn">② 分割</div><div class="pt">人像分割</div><div class="pd">~10ms</div></div>
+      <div class="parr">→</div>
+      <div class="pstep hot"><div class="pn">③ 风格化（瓶颈）</div><div class="pt">推理引擎</div><div class="pd">10~100ms</div></div>
+      <div class="parr">→</div>
+      <div class="pstep"><div class="pn">④ 上屏</div><div class="pt">显示</div><div class="pd">~16ms</div></div>
     </div>
 
-    <div class="two-col" style="margin-top:30px">
-      <div>
+    <div class="split" style="margin-top:28px">
+      <div class="tbl-wrap">
         <table>
-          <thead><tr><th>等级</th><th>技术</th><th>单帧耗时</th><th>说明</th></tr></thead>
+          <thead><tr><th>等级</th><th>技术</th><th>单帧</th><th>说明</th></tr></thead>
           <tbody>
-            <tr><td><b>入门</b></td><td>AnimeGANv2 逐帧</td><td>10~20ms</td><td>天生实时，30fps+</td></tr>
-            <tr><td><b>进阶</b></td><td>StreamDiffusion（1 步推理 + TensorRT + 帧队列）</td><td>30~100ms</td><td>扩散画质接近实时</td></tr>
+            <tr><td><b>入门</b></td><td>AnimeGANv2</td><td>10~20ms</td><td>天生实时 30fps+</td></tr>
+            <tr><td><b>进阶</b></td><td>StreamDiffusion</td><td>30~100ms</td><td>扩散画质接近实时</td></tr>
             <tr><td><b>折中</b></td><td>跳帧 + 帧间混合</td><td>—</td><td>最简单兜底</td></tr>
           </tbody>
         </table>
@@ -328,34 +326,29 @@
       <div class="card">
         <div class="num">让 5070 跑满的四个开关</div>
         <h3>推理栈优化</h3>
-        <p>
-          <span class="chip cyan">半精度 fp16</span>
-          <span class="chip purple">TensorRT 编译</span>
-          <span class="chip pink">512×512 分辨率控制</span>
-          <span class="chip green">固定输入尺寸避免重编译</span>
-        </p>
-        <p style="margin-top:16px">硬件：笔记本 <b>RTX 5070 Laptop（8GB 显存）+ i9-14900HX + 32GB</b>，已确认可用。</p>
+        <p><span class="chip c">半精度 fp16</span><span class="chip p">TensorRT 编译</span><span class="chip k">512×512 分辨率</span><span class="chip g">固定输入尺寸</span></p>
+        <p style="margin-top:14px">硬件：<b>RTX 5070 Laptop（8GB）＋ i9-14900HX ＋ 32GB</b>，已确认可用。</p>
       </div>
     </div>
 
-    <h2 style="margin-top:50px;font-size:26px">软件栈</h2>
-    <div class="grid g4" style="margin-top:20px">
-      <div class="card"><h3>PyTorch ≥2.7 + cu128</h3><p>RTX 5070（Blackwell/sm_120）必需，否则报 "no kernel image"。</p></div>
+    <h2 style="font-size:25px;margin-top:44px">软件栈</h2>
+    <div class="grid g4" style="margin-top:16px">
+      <div class="card"><h3>PyTorch ≥2.7 + cu128</h3><p>RTX 5070（Blackwell/sm_120）必需，否则 "no kernel image"。</p></div>
       <div class="card"><h3>AnimeGANv2</h3><p>模式 A 保底引擎，轻量 GAN 逐帧。</p></div>
-      <div class="card"><h3>StreamDiffusion / V2</h3><p>实时扩散管线，TensorRT + 帧队列，进阶升级。</p></div>
-      <div class="card"><h3>OpenCV + FFmpeg + RIFE</h3><p>模式 B 视频工程：合成、加 BGM、补帧去闪烁。</p></div>
+      <div class="card"><h3>StreamDiffusion</h3><p>实时扩散管线，TensorRT + 帧队列。</p></div>
+      <div class="card"><h3>OpenCV + FFmpeg + RIFE</h3><p>模式 B：合成、加 BGM、补帧去闪烁。</p></div>
       <div class="card"><h3>rembg / mediapipe</h3><p>一行代码抠人，人像分割。</p></div>
-      <div class="card"><h3>diffusers</h3><p>SD-Turbo / SDXL-Turbo / SD1.5-LCM 官方库。</p></div>
-      <div class="card"><h3>FastAPI</h3><p>局域网二维码取图 / 取视频服务。</p></div>
+      <div class="card"><h3>diffusers</h3><p>SD-Turbo / SDXL-Turbo 官方库。</p></div>
+      <div class="card"><h3>FastAPI</h3><p>局域网二维码取图 / 取视频。</p></div>
       <div class="card"><h3>photobooth-app</h3><p>开源照相亭交互与分享参考。</p></div>
     </div>
   </div>
 </section>
 
-<!-- ============ 仓库结构 ============ -->
-<section id="structure">
+<!-- ==================== 仓库结构（背景：暗） ==================== -->
+<section class="sec" id="structure">
   <div class="wrap">
-    <div class="sec-tag">Codebase</div>
+    <div class="tag">Codebase</div>
     <h2>仓库结构</h2>
     <pre><span class="cm"># 纯函数式核心管线，互相解耦，可两人并行开发</span>
 app/
@@ -366,152 +359,114 @@ app/
 │   ├── stylizer_anime.py    <span class="cm">AnimeGANv2 实时风格化（模式 A）</span>
 │   ├── stylizer_sd.py       <span class="cm">SD 生成精修照（扩展）</span>
 │   ├── stylizer_mock.py     <span class="hl">OpenCV 描边 mock 引擎（纯流程验证）</span>
-│   ├── video_batch.py       <span class="cm">视频帧批处理（模式 B，文件进/帧序列出）</span>
+│   ├── video_batch.py       <span class="cm">视频帧批处理（模式 B）</span>
 │   └── compose.py           <span class="cm">ffmpeg 合成 MP4 + BGM</span>
 ├── ui/
 │   └── realtime_window.py   <span class="cm">全屏窗口 + HUD（FPS/按键提示）</span>
 └── server/
     ├── api.py               <span class="cm">FastAPI 取图服务</span>
     └── qr.py                <span class="cm">二维码生成</span>
-scripts/                      <span class="cm">check_env.py / check_realtime.py / make_test_video.py</span>
-tests/                        <span class="cm">test_pipeline.py（4 项回归测试）</span>
-docs/                         <span class="cm">验收记录 / 资源清单 / 队友任务 / 建模素材指引</span></pre>
+scripts/  tests/  docs/        <span class="cm">自检脚本 / 回归测试 / 文档</span></pre>
 
-    <div class="callout">
-      <b>分工接口契约：</b> 推理侧只需交付 <code>stylizer(frame) → frame</code> 与
+    <div class="callout"><b>分工接口契约：</b> 推理侧只需交付 <code>stylizer(frame) → frame</code> 与
       <code>stylize_frames(frame_paths, stylizer, out_dir, progress)</code>；应用侧只依赖这两个接口 +
-      <code>compose.frames_to_video()</code>。双方通过函数签名解耦，可完全并行。
-    </div>
+      <code>compose.frames_to_video()</code>。双方通过函数签名解耦，可完全并行。</div>
   </div>
 </section>
 
-<!-- ============ 验收记录 ============ -->
-<section id="accept">
+<!-- ==================== 验收记录（背景：bg3） ==================== -->
+<section class="sec" id="accept">
   <div class="wrap">
-    <div class="sec-tag">Acceptance</div>
+    <div class="tag">Acceptance</div>
     <h2>10/21 本机验收记录</h2>
-    <p class="lead">本轮仅验证 <b>mock 管线</b>（OpenCV 描边引擎），不下载或测试 AI 权重。摄像头图像、生成视频、模型素材仅保存在本机。</p>
+    <p class="lead">本轮仅验证 <b>mock 管线</b>（OpenCV 描边引擎），不下载或测试 AI 权重。产物仅保存在本机。</p>
 
-    <table>
-      <thead><tr><th>编号</th><th>验收项</th><th>状态</th><th>实际结果</th></tr></thead>
-      <tbody>
-        <tr>
-          <td><b>A1</b></td><td>环境自检</td>
-          <td><span class="st pass"><span class="dot"></span>通过</span></td>
-          <td>Python 3.12.10 · torch 2.11.0+cu128 / torchvision 0.26.0+cu128 · CUDA 可用 · RTX 5070 Laptop 7.9 GiB；13 项必需检查通过。</td>
-        </tr>
-        <tr>
-          <td><b>A2</b></td><td>摄像头原画</td>
-          <td><span class="st warn"><span class="dot"></span>自动通过·待人工</span></td>
-          <td>全屏预览约 8 秒自动退出；158 张不同采集帧，约 19.09 FPS。</td>
-        </tr>
-        <tr>
-          <td><b>A3</b></td><td>实时 mock</td>
-          <td><span class="st warn"><span class="dot"></span>自动通过·待人工</span></td>
-          <td>158 张不同采集帧，约 19.07 FPS；S 键保存截图逻辑通过。</td>
-        </tr>
-        <tr>
-          <td><b>A4</b></td><td>视频 mock</td>
-          <td><span class="st pass"><span class="dot"></span>通过</span></td>
-          <td>源 4s / 24fps / 96 帧 → 输出 4s / 30fps / 120 帧 MP4，全部帧解码成功。</td>
-        </tr>
-        <tr>
-          <td><b>A5</b></td><td>取图服务</td>
-          <td><span class="st pass"><span class="dot"></span>通过</span></td>
-          <td>8000 端口服务，<code>/api/items</code> 与 <code>/files/文件名</code> HTTP 200，内容逐字节一致；手机局域网访问待验证。</td>
-        </tr>
-        <tr>
-          <td><b>A6</b></td><td>协作闭环</td>
-          <td><span class="st pass"><span class="dot"></span>通过</span></td>
-          <td>修复提交 <code>aad8ed3</code> 已推送 <code>origin/codex/mock-acceptance-1021</code>；人工观感待确认。</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <div class="grid g2" style="margin-top:26px">
-      <div class="card">
-        <div class="num">本轮修复</div>
-        <h3>7 项关键问题</h3>
-        <p>
-          ① 实时启动等待首帧、退出释放摄像头<br>
-          ② 窗口仅处理新采集帧，FPS 不重复计算<br>
-          ③ mock 视频管线不再强制导入 torch<br>
-          ④ 输入视频无有效帧时明确报错<br>
-          ⑤ 输入/风格化帧分别保存，保留源帧率精度<br>
-          ⑥ 修正 FFmpeg BGM 参数顺序、短音乐循环<br>
-          ⑦ 兼容 Windows 中文路径读写
-        </p>
-      </div>
-      <div class="card">
-        <div class="num">自动回归检查</div>
-        <h3>4 项测试全部通过</h3>
-        <p>
-          <code>python -m unittest discover -s tests -v</code><br><br>
-          · mock 编码 / 完整解码 / 列表与下载一致性<br>
-          · 短 BGM 循环，视频时长保持，输出含 AAC 音轨<br>
-          · 非整数源帧率合成时长<br>
-          · 无效输入视频明确失败<br><br>
-          <span class="chip green">pip check 通过</span>
-          <span class="chip green">git diff --check 通过</span>
-        </p>
-      </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>编号</th><th>验收项</th><th>状态</th><th>实际结果</th></tr></thead>
+        <tbody>
+          <tr><td><b>A1</b></td><td>环境自检</td><td><span class="st pass"><span class="dot"></span>通过</span></td>
+            <td>Python 3.12.10 · torch 2.11.0+cu128 · CUDA 可用 · RTX 5070 Laptop 7.9 GiB；13 项必需检查通过。</td></tr>
+          <tr><td><b>A2</b></td><td>摄像头原画</td><td><span class="st warn"><span class="dot"></span>自动通过·待人工</span></td>
+            <td>全屏预览约 8 秒自动退出；158 张不同采集帧，约 19.09 FPS。</td></tr>
+          <tr><td><b>A3</b></td><td>实时 mock</td><td><span class="st warn"><span class="dot"></span>自动通过·待人工</span></td>
+            <td>158 张不同采集帧，约 19.07 FPS；S 键保存截图逻辑通过。</td></tr>
+          <tr><td><b>A4</b></td><td>视频 mock</td><td><span class="st pass"><span class="dot"></span>通过</span></td>
+            <td>源 4s / 24fps / 96 帧 → 输出 4s / 30fps / 120 帧 MP4，全部帧解码成功。</td></tr>
+          <tr><td><b>A5</b></td><td>取图服务</td><td><span class="st pass"><span class="dot"></span>通过</span></td>
+            <td>8000 端口，<code>/api/items</code> 与 <code>/files/文件名</code> HTTP 200，内容逐字节一致；手机局域网访问待验证。</td></tr>
+          <tr><td><b>A6</b></td><td>协作闭环</td><td><span class="st pass"><span class="dot"></span>通过</span></td>
+            <td>修复提交 <code>aad8ed3</code> 已推送 <code>origin/codex/mock-acceptance-1021</code>。</td></tr>
+        </tbody>
+      </table>
     </div>
 
-    <div class="callout">
-      <b>方案乙（Live2D 面捕）状态：</b>已下载 CubismWebSamples（Haru 21 个引用文件、Hiyori 17 个引用文件均齐全），
-      但本机未装 Steam / VTube Studio，B1~B4 均不标记通过。<b>结论：待试用</b>，无法据此决定「上 / 不上」。
-      后续步骤：装 VTube Studio → 导入 Haru/Hiyori → 摄像头校准 → 测试转头/眨眼/张嘴 → 录 10~20 秒同框视频评价延迟。
+    <div class="split" style="margin-top:24px">
+      <div class="card"><div class="num">本轮修复</div><h3>7 项关键问题</h3>
+        <p>① 启动等待首帧、退出释放摄像头<br>② 仅处理新采集帧，FPS 不重复计算<br>③ mock 管线不再强制导入 torch<br>
+        ④ 无效输入视频明确报错<br>⑤ 输入/风格化帧分别保存，保留帧率精度<br>⑥ 修正 FFmpeg BGM 参数与短音乐循环<br>
+        ⑦ 兼容 Windows 中文路径读写</p></div>
+      <div class="card"><div class="num">自动回归检查</div><h3>4 项测试全部通过</h3>
+        <p><code>python -m unittest discover -s tests -v</code><br><br>
+        · mock 编码 / 完整解码 / 列表与下载一致性<br>· 短 BGM 循环、时长保持、含 AAC 音轨<br>
+        · 非整数源帧率合成时长<br>· 无效输入视频明确失败<br><br>
+        <span class="chip g">pip check 通过</span><span class="chip g">git diff --check 通过</span></p></div>
     </div>
+
+    <div class="callout"><b>方案乙（Live2D 面捕）状态：</b>已下载 CubismWebSamples（Haru 21、Hiyori 17 个引用文件齐全），
+      但本机未装 Steam / VTube Studio，B1~B4 不标记通过。<b>结论：待试用</b>。后续：装 VTube Studio → 导入 Haru/Hiyori → 校准 → 测转头/眨眼/张嘴 → 录同框视频评延迟。</div>
   </div>
 </section>
 
-<!-- ============ 团队与排期 ============ -->
-<section id="team">
+<!-- ==================== 团队与排期（背景：bg1） ==================== -->
+<section class="sec" id="team">
   <div class="wrap">
-    <div class="sec-tag">Team &amp; Timeline</div>
+    <div class="tag">Team &amp; Timeline</div>
     <h2>团队分工与时间线</h2>
 
     <div class="grid g4">
-      <div class="card"><div class="num">ROLE 1</div><h3>CV / 推理管线</h3><p>摄像头采集、分割、风格化模型集成、TensorRT / 帧率调优。</p><span class="chip cyan">模式 A/B 核心服务</span></div>
-      <div class="card"><div class="num">ROLE 2</div><h3>视频工程</h3><p>录制模块、RIFE/EbSynth 时序平滑、ffmpeg 合成加 BGM、二维码服务。</p><span class="chip purple">模式 B 全链路</span></div>
-      <div class="card"><div class="num">ROLE 3</div><h3>交互 / 大屏</h3><p>拍摄流程 UI、倒计时、大屏轮播、动效。</p><span class="chip pink">现场可体验程序</span></div>
-      <div class="card"><div class="num">ROLE 4</div><h3>宣发 / 部署</h3><p>压力测试、崩溃自重启、设备电源、物料传播、演示视频。</p><span class="chip green">稳定运行 + 3 分钟视频</span></div>
+      <div class="card"><div class="num">ROLE 1</div><h3>CV / 推理管线</h3><p>摄像头采集、分割、模型集成、TensorRT / 帧率调优。</p><span class="chip c">模式 A/B 核心服务</span></div>
+      <div class="card"><div class="num">ROLE 2</div><h3>视频工程</h3><p>录制模块、RIFE/EbSynth 平滑、ffmpeg 合成加 BGM、二维码服务。</p><span class="chip p">模式 B 全链路</span></div>
+      <div class="card"><div class="num">ROLE 3</div><h3>交互 / 大屏</h3><p>拍摄流程 UI、倒计时、大屏轮播、动效。</p><span class="chip k">现场可体验</span></div>
+      <div class="card"><div class="num">ROLE 4</div><h3>宣发 / 部署</h3><p>压力测试、崩溃自重启、设备电源、物料传播、演示视频。</p><span class="chip g">稳定运行</span></div>
     </div>
-    <p class="lead" style="margin-top:16px;font-size:14px">3 人时建议：视频工程并入 CV，宣发部署并入交互。</p>
+    <p style="margin-top:14px;color:var(--muted);font-size:13.5px">3 人时建议：视频工程并入 CV，宣发部署并入交互。</p>
 
-    <h2 style="font-size:26px;margin-top:40px">时间线（10/17 开赛 → 10/30 提交）</h2>
+    <h2 style="font-size:25px;margin-top:40px">时间线（10/17 开赛 → 10/30 提交）</h2>
     <div class="timeline">
-      <div class="tl-item"><div class="tl-date">10/18 – 10/20</div><div class="tl-text">环境搭建（PyTorch cu128 验证 5070）；跑通 AnimeGANv2 实时摄像头（模式 A 上屏）</div></div>
-      <div class="tl-item"><div class="tl-date">10/21 – 10/24</div><div class="tl-text">模式 B 全链路：录制 → 逐帧风格化 → 合成 MP4 → 二维码取图；<b>10/24 中期检查交可运行版</b></div></div>
-      <div class="tl-item"><div class="tl-date">10/25 – 10/27</div><div class="tl-text">时序平滑打磨（RIFE/EbSynth）、StreamDiffusion 挑战（可选冲刺）、降级方案</div></div>
-      <div class="tl-item"><div class="tl-date">10/28</div><div class="tl-text"><b>1 小时连续压力测试</b>（记录帧率与温度衰减）；录演示视频（≤3min）+ 文档 + AI 使用声明</div></div>
-      <div class="tl-item"><div class="tl-date">10/30 22:00</div><div class="tl-text">提交：代码仓库 + 视频 + 文档 + 声明</div></div>
-      <div class="tl-item"><div class="tl-date">10/31</div><div class="tl-text">现场展览：提前到场调试设备与灯光，副屏放模式 C 彩蛋与兜底录屏</div></div>
+      <div class="tl"><div class="d">10/18 – 10/20</div><div class="t">环境搭建（cu128 验证 5070）；跑通 AnimeGANv2 实时摄像头（模式 A 上屏）</div></div>
+      <div class="tl"><div class="d">10/21 – 10/24</div><div class="t">模式 B 全链路：录制 → 逐帧风格化 → 合成 MP4 → 二维码取图；<b>10/24 中期检查交可运行版</b></div></div>
+      <div class="tl"><div class="d">10/25 – 10/27</div><div class="t">时序平滑打磨（RIFE/EbSynth）、StreamDiffusion 挑战、降级方案</div></div>
+      <div class="tl"><div class="d">10/28</div><div class="t"><b>1 小时连续压力测试</b>；录演示视频（≤3min）+ 文档 + AI 使用声明</div></div>
+      <div class="tl"><div class="d">10/30 22:00</div><div class="t">提交：代码仓库 + 视频 + 文档 + 声明</div></div>
+      <div class="tl"><div class="d">10/31</div><div class="t">现场展览：提前到场调试设备与灯光，副屏放模式 C 彩蛋与兜底录屏</div></div>
     </div>
   </div>
 </section>
 
-<!-- ============ 风险预案 ============ -->
-<section id="risk">
+<!-- ==================== 风险预案（背景：bg2） ==================== -->
+<section class="sec" id="risk">
   <div class="wrap">
-    <div class="sec-tag">Risk</div>
+    <div class="tag">Risk</div>
     <h2>风险与预案</h2>
-    <table>
-      <thead><tr><th>风险</th><th>概率</th><th>预案</th></tr></thead>
-      <tbody>
-        <tr><td><b>长时间高负载降频、帧率衰减</b></td><td>高</td><td>散热支架 + 性能模式 + 任务间隔冷却；实时模式降分辨率</td></tr>
-        <tr><td><b>视频合成失败 / 闪烁严重</b></td><td>中</td><td>降级输出「关键帧九宫格图」（仍可扫码带走）；RIFE 参数预调</td></tr>
-        <tr><td><b>现场灯光差</b></td><td>中</td><td>自备补光灯；曝光自动校正</td></tr>
-        <tr><td><b>StreamDiffusion 调不通</b></td><td>中</td><td>有 AnimeGANv2 实时版兜底，核心体验不受影响</td></tr>
-        <tr><td><b>现场断网</b></td><td>低</td><td>全流程纯局域网设计，模型权重提前下载本地</td></tr>
-        <tr><td><b>排队拥堵</b></td><td>低</td><td>二维码异步取结果，大屏轮播维持围观</td></tr>
-      </tbody>
-    </table>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>风险</th><th>概率</th><th>预案</th></tr></thead>
+        <tbody>
+          <tr><td><b>长时间高负载降频、帧率衰减</b></td><td>高</td><td>散热支架 + 性能模式 + 任务间隔冷却；实时模式降分辨率</td></tr>
+          <tr><td><b>视频合成失败 / 闪烁严重</b></td><td>中</td><td>降级输出「关键帧九宫格图」；RIFE 参数预调</td></tr>
+          <tr><td><b>现场灯光差</b></td><td>中</td><td>自备补光灯；曝光自动校正</td></tr>
+          <tr><td><b>StreamDiffusion 调不通</b></td><td>中</td><td>AnimeGANv2 实时版兜底，核心体验不受影响</td></tr>
+          <tr><td><b>现场断网</b></td><td>低</td><td>全流程纯局域网，模型权重提前下载本地</td></tr>
+          <tr><td><b>排队拥堵</b></td><td>低</td><td>二维码异步取结果，大屏轮播维持围观</td></tr>
+        </tbody>
+      </table>
+    </div>
 
-    <div class="grid g4" style="margin-top:26px">
-      <div class="card"><div class="icon">🤖</div><h3>AI 合规</h3><p>生成模型全部本地运行，代码自研 + 开源组件（Apache/MIT），附《AI 使用声明》。</p></div>
+    <div class="grid g4" style="margin-top:24px">
+      <div class="card"><div class="icon">🤖</div><h3>AI 合规</h3><p>模型全部本地运行，代码自研 + 开源组件（Apache/MIT），附《AI 使用声明》。</p></div>
       <div class="card"><div class="icon">🔒</div><h3>隐私</h3><p>视频仅在本地局域网处理存储，不经云端；提供「删除我的视频」选项。</p></div>
-      <div class="card"><div class="icon">🎵</div><h3>素材版权</h3><p>BGM 用无版权音乐，LoRA/模型选可商用许可，Logo 相框自绘。</p></div>
+      <div class="card"><div class="icon">🎵</div><h3>素材版权</h3><p>BGM 用无版权音乐，模型选可商用许可，Logo 相框自绘。</p></div>
       <div class="card"><div class="icon">🌐</div><h3>部署合规</h3><p>纯本地局域网服务，无外网依赖。</p></div>
     </div>
   </div>
@@ -520,11 +475,8 @@ docs/                         <span class="cm">验收记录 / 资源清单 / 队
 <footer>
   <div class="wrap">
     <p>AI PhotoBooth · AI 大头贴 — 2026 秋季 AI 黑客松参赛项目</p>
-    <p style="margin-top:8px">
-      源码仓库：<a href="https://github.com/tonylyles/Hackathon_2026" target="_blank" rel="noopener">github.com/tonylyles/Hackathon_2026</a>
-      · 分支 <code>codex/mock-acceptance-1021</code>
-    </p>
-    <p style="margin-top:8px">本汇报基于仓库 README、项目说明、docs/ 验收记录与源代码生成。</p>
+    <p style="margin-top:8px">源码：<a href="https://github.com/tonylyles/Hackathon_2026" target="_blank" rel="noopener">github.com/tonylyles/Hackathon_2026</a> · 分支 <code>codex/mock-acceptance-1021</code></p>
+    <p style="margin-top:8px;color:#6f7891">背景插画：AI 生成文艺复兴风格「大黄」仿作 · 本页基于仓库 README / 项目说明 / docs 验收记录生成</p>
   </div>
 </footer>
 
