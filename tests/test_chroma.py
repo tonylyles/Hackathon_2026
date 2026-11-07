@@ -7,7 +7,7 @@ from unittest.mock import patch
 import cv2
 import numpy as np
 
-from app.core.backgrounds import background_label, cover_image
+from app.core.backgrounds import background_label, contain_image, cover_image, load_background
 from app.core.chroma import BackgroundCatalog, ChromaRejected, ChromaSettings, blend_scene, compose_avatar
 
 
@@ -72,6 +72,42 @@ class ChromaTests(unittest.TestCase):
         cropped_tall = cover_image(tall, (2, 2))
         np.testing.assert_array_equal(cropped_tall[:, 0, 0], [40, 60])
 
+    def test_contain_image_keeps_edges_and_centers_letterboxing(self):
+        wide = np.zeros((2, 6, 3), np.uint8)
+        for x in range(6):
+            wide[:, x] = x * 20
+        original = wide.copy()
+        contained = contain_image(wide, (6, 4))
+        self.assertEqual(contained.shape, (4, 6, 3))
+        np.testing.assert_array_equal(contained[1, :, 0], [0, 20, 40, 60, 80, 100])
+        np.testing.assert_array_equal(contained[[0, 3]], 0)
+        np.testing.assert_array_equal(wide, original)
+
+        tall = np.transpose(wide, (1, 0, 2))
+        contained_tall = contain_image(tall, (4, 6))
+        self.assertEqual(contained_tall.shape, (6, 4, 3))
+        np.testing.assert_array_equal(contained_tall[:, 1, 0], [0, 20, 40, 60, 80, 100])
+        np.testing.assert_array_equal(contained_tall[:, [0, 3]], 0)
+        np.testing.assert_array_equal(contain_image(wide, (6, 2)), wide)
+        self.assertEqual(contain_image(wide, (2, 2)).shape, (2, 2, 3))
+
+    def test_user_background_is_contained_through_catalog(self):
+        with tempfile.TemporaryDirectory() as temp:
+            image = np.full((2, 6, 3), (40, 100, 180), np.uint8)
+            image[:, 0] = (2, 5, 9)
+            image[:, -1] = (8, 12, 16)
+            cv2.imencode(".png", image)[1].tofile(Path(temp) / "wide.png")
+            direct = load_background("user:wide.png", (6, 4), temp)
+            catalog = BackgroundCatalog(temp).get("user:wide.png", (6, 4))
+            np.testing.assert_array_equal(catalog, direct)
+            np.testing.assert_array_equal(direct[1:3], image)
+            np.testing.assert_array_equal(direct[[0, 3]], 0)
+
+    def test_contain_image_handles_narrow_and_tiny_targets(self):
+        image = np.full((1, 100, 3), 150, np.uint8)
+        for size in ((1, 1), (3, 100), (100, 3)):
+            self.assertEqual(contain_image(image, size).shape, (size[1], size[0], 3))
+
     def test_scene_blending_precedes_chroma_key(self):
         base = np.full((10, 10, 3), (20, 40, 60), np.uint8)
         original_base, original_bg = base.copy(), self.bg.copy()
@@ -99,17 +135,16 @@ class ChromaTests(unittest.TestCase):
             image = np.full((4, 6, 3), (20, 50, 180), np.uint8)
             cv2.imencode(".jpg", image)[1].tofile(frog / "最后的晚餐.jpg")
             cv2.imencode(".jpg", image)[1].tofile(cow / "另一角色.jpg")
-            self.assertEqual(BackgroundCatalog(root).items,
-                             ("builtin:aurora", "builtin:sunset"))
+            self.assertEqual(BackgroundCatalog(root).items, ())
             catalog = BackgroundCatalog(frog)
-            self.assertIn("user:最后的晚餐.jpg", catalog.items)
+            self.assertEqual(catalog.items, ("user:最后的晚餐.jpg",))
             self.assertNotIn("user:另一角色.jpg", catalog.items)
             self.assertEqual(catalog.get("user:最后的晚餐.jpg", (12, 8)).shape, (8, 12, 3))
 
     def test_builtin_backgrounds_and_no_directory(self):
         catalog = BackgroundCatalog()
-        self.assertEqual(catalog.items, ("builtin:aurora", "builtin:sunset"))
-        for name in catalog.items:
+        self.assertEqual(catalog.items, ())
+        for name in ("builtin:aurora", "builtin:sunset"):
             image = catalog.get(name, (32, 24))
             self.assertEqual(image.shape, (24, 32, 3))
             self.assertEqual(image.dtype, np.uint8)

@@ -19,6 +19,7 @@ from app.core.camera import mirror
 from app.core.preview_worker import PreviewWorker
 from app.core.chroma import BackgroundCatalog, ChromaRejected, blend_scene, compose_avatar
 from app.core.vts_client import VTSAPIError
+from app.core.vts_hotkey_labels import VTSHotkeyLabels
 from app.core.image_io import read_image
 from app.ui.camera_layout import compose_camera, scaled_rect
 from app.server.qr import item_url, lan_ip, make_qr
@@ -71,7 +72,7 @@ def _font(size):
 class BoothWindow:
     WIDTH, HEIGHT = 1280, 720
     PHOTO = ("photo", (68, 650, 360, 704), "拍照")
-    VIDEO = ("video", (390, 650, 720, 704), "录制 4 秒")
+    VIDEO = ("video", (390, 650, 720, 704), f"录制 {RECORD_SECONDS:g} 秒")
     EXIT = ("exit", (1120, 12, 1260, 56), "退出")
     MAIN_PREVIEW = (28, 76, 928, 596)
     RAW_INSET = (946, 119, 1254, 338)
@@ -82,8 +83,9 @@ class BoothWindow:
         "photo": (74, 624, 340, 688),
         "video": (360, 624, 660, 688),
         "hotkeys": (850, 616, 1248, 676),
-        "models": (1028, 72, 1248, 104),
-        "retry": (850, 72, 1018, 104),
+        "models": (1106, 72, 1248, 104),
+        "edit_hotkeys": (978, 72, 1098, 104),
+        "retry": (850, 72, 970, 104),
         "model_dialog": (240, 110, 1040, 608),
         "model_refresh": (665, 127, 820, 171),
         "model_close": (842, 127, 1015, 171),
@@ -109,7 +111,8 @@ class BoothWindow:
                  share_ready=None, output_dir=OUTPUT_DIR, processor=None,
                  avatar_feed=None, vts_controller=None, vts_capture=None,
                  background_catalog=None, vts_api_error=None, vts_launcher=None,
-                 camera_opener=None, camera_stylizer=None):
+                 camera_opener=None, camera_stylizer=None,
+                 hotkey_labels=None, hotkey_name_prompt=None):
         self.camera, self.stylizer = camera, stylizer
         self.camera_opener, self.camera_stylizer = camera_opener, camera_stylizer
         self.source = "vts" if vts_capture else "camera"
@@ -132,6 +135,10 @@ class BoothWindow:
         self._vts_connecting = False
         self._vts_startup_deadline = 0.0
         self.vts_capture = False if vts_capture is None else vts_capture
+        self.hotkey_labels = hotkey_labels if hotkey_labels is not None else VTSHotkeyLabels()
+        self.hotkey_name_prompt = hotkey_name_prompt or self._prompt_hotkey_name
+        self.vts_hotkey_editing = False
+        self._hotkey_prompt_open = False
         self._custom_background_catalog = background_catalog is not None
         self.backgrounds = background_catalog if background_catalog is not None else BackgroundCatalog(BACKGROUND_DIR)
         self._vts_base = None
@@ -183,6 +190,7 @@ class BoothWindow:
         self.styled_sequence = 0
         self._inference_error = None
         self.record_seconds, self.record_fps = record_seconds, record_fps
+        self.VIDEO = ("video", self.VIDEO[1], f"录制 {record_seconds:g} 秒")
         self.share_ready = share_ready or (lambda: True)
         self.output_dir = Path(output_dir)
         self.qr_dir = self.output_dir / ".booth_qr"
@@ -256,7 +264,8 @@ class BoothWindow:
         """Use only the selected character's flat image directory."""
         if self._custom_background_catalog:
             return
-        folder = next((name for name in ("奶蛙", "牛来") if name in (self.vts_model_name or "")), None)
+        folder = next((name for name in ("奶蛙", "牛来", "肥嘟嘟")
+                       if name in (self.vts_model_name or "")), None)
         directory = BACKGROUND_DIR / folder if folder else BACKGROUND_DIR
         if self.backgrounds.user_dir == directory:
             return
@@ -415,13 +424,93 @@ class BoothWindow:
         x0, y0, x1, y1 = rect
         return x0 <= x < x1 and y0 <= y < y1
 
+    def _can_edit_hotkeys(self):
+        return bool(self.vts_capture and self.source == "vts" and self.state == "ready"
+                    and self.vts_controller and self.vts_api_connected and self.vts_model_id
+                    and not (self.vts_models_open or self.vts_model_busy or self.vts_model_loading
+                             or self.vts_model_wait_frame is not None or self.vts_model_error)
+                    and any(item.get("hotkeyID") for item in self.vts_hotkey_items[:4]))
+
+    def _prompt_hotkey_name(self, current, original):
+        """Use a native text widget so Chinese IME input works outside OpenCV."""
+        import tkinter as tk
+        from tkinter import simpledialog
+
+        window = "Naiwa - PhotoBooth"
+        root = None
+        fullscreen_changed = False
+        try:
+            cv2.setWindowProperty(window, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_NORMAL)
+            fullscreen_changed = True
+            cv2.pollKey()
+            root = tk.Tk()
+            root.withdraw()
+            root.attributes("-topmost", True)
+            root.lift()
+            root.update_idletasks()
+            return simpledialog.askstring("编辑动作名称", "输入动作名称（留空恢复 VTS 原名称）：",
+                                          parent=root, initialvalue=current if current != "动作" else "")
+        finally:
+            try:
+                if root is not None:
+                    root.destroy()
+            finally:
+                if fullscreen_changed:
+                    cv2.setWindowProperty(window, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+                    cv2.pollKey()
+
+    def _edit_hotkey(self, hotkey_id):
+        if not self.vts_hotkey_editing or not self._can_edit_hotkeys():
+            self.vts_hotkey_editing = False
+            return
+        model_id, generation = self.vts_model_id, self._vts_generation
+        item = next((item for item in self.vts_hotkey_items[:4]
+                     if item.get("hotkeyID") == hotkey_id), None)
+        if item is None:
+            return
+        original = item.get("name") or "动作"
+        current = self.hotkey_labels.label_for(model_id, hotkey_id, original)
+        self._hotkey_prompt_open = True
+        try:
+            try:
+                name = self.hotkey_name_prompt(current, original)
+            except Exception as exc:
+                self.status = f"无法打开动作名称输入框：{str(exc)[:40]}"
+                return
+            if name is None:
+                self.status = "已取消修改动作名称"
+                return
+            if (generation != self._vts_generation or model_id != self.vts_model_id
+                    or not self._can_edit_hotkeys()
+                    or not any(entry.get("hotkeyID") == hotkey_id
+                               for entry in self.vts_hotkey_items[:4])):
+                self.status = "当前角色或动作已变化，未保存名称"
+                return
+            try:
+                self.hotkey_labels.set_label(model_id, hotkey_id, name)
+            except (OSError, ValueError) as exc:
+                self.status = f"保存动作名称失败：{str(exc)[:40]}"
+                return
+            self.status = "动作名称已保存" if name.strip() else "已恢复 VTS 原动作名称"
+        finally:
+            self._hotkey_prompt_open = False
+            self.vts_hotkey_editing = False
+
     def _vts_buttons(self):
         """One source of geometry and labels for painting and pointer input."""
         buttons = [("exit", self.EXIT[1], "退出")]
+        if self.vts_hotkey_editing and not self._can_edit_hotkeys():
+            self.vts_hotkey_editing = False
+        if self.vts_hotkey_editing:
+            buttons.append(("edit_hotkeys", self.VTS_LAYOUT["edit_hotkeys"], "取消编辑"))
+            buttons.extend(self._hotkey_button_specs())
+            return buttons
         if self.vts_capture and not self.vts_models_open:
             buttons.append(("retry", self.VTS_LAYOUT["retry"], "重试连接"))
         if self.vts_controller and self.vts_api_connected and not self.vts_models_open:
             buttons.append(("models", self.VTS_LAYOUT["models"], "选择角色"))
+        if self._can_edit_hotkeys():
+            buttons.append(("edit_hotkeys", self.VTS_LAYOUT["edit_hotkeys"], "编辑动作"))
         if self.state != "ready":
             return buttons
         if self.vts_controller and self.vts_api_connected:
@@ -474,18 +563,24 @@ class BoothWindow:
                 ("video", self.VTS_LAYOUT["video"], f"录像 {self.record_seconds:g} 秒  /  V"),
             ])
         if self.vts_controller and self.vts_api_connected:
-            x0, y0, x1, y1 = self.VTS_LAYOUT["hotkeys"]
-            width = (x1 - x0 - 3 * 8) // 4
-            for index, item in enumerate(self.vts_hotkey_items[:4]):
-                if item.get("hotkeyID"):
-                    left = x0 + index * (width + 8)
-                    buttons.append(("hotkey:" + item["hotkeyID"],
-                                    (left, y0, left + width, y1),
-                                    item.get("name") or "动作"))
+            buttons.extend(self._hotkey_button_specs())
         return buttons
 
+    def _hotkey_button_specs(self):
+        x0, y0, x1, y1 = self.VTS_LAYOUT["hotkeys"]
+        width = (x1 - x0 - 3 * 8) // 4
+        specs = []
+        for index, item in enumerate(self.vts_hotkey_items[:4]):
+            hotkey_id = item.get("hotkeyID")
+            if hotkey_id:
+                left = x0 + index * (width + 8)
+                label = self.hotkey_labels.label_for(self.vts_model_id, hotkey_id,
+                                                     item.get("name") or "动作")
+                specs.append(("hotkey:" + hotkey_id, (left, y0, left + width, y1), label))
+        return specs
+
     def _mouse(self, event, x, y, flags, _param):
-        if event != cv2.EVENT_LBUTTONUP:
+        if event != cv2.EVENT_LBUTTONUP or self._hotkey_prompt_open:
             return
         sx, sy = self._display_scale
         x, y = round(x / sx), round(y / sy)
@@ -495,6 +590,10 @@ class BoothWindow:
                     continue
                 if action == "exit":
                     self.state = "exit"
+                elif action == "edit_hotkeys":
+                    self.vts_hotkey_editing = not self.vts_hotkey_editing
+                    self.status = ("点击下方动作选择要改名的按钮" if self.vts_hotkey_editing
+                                   else "已退出动作名称编辑")
                 elif action == "retry":
                     self._request_vts_connection(retry=True)
                 elif action == "source_virtual":
@@ -524,7 +623,9 @@ class BoothWindow:
                 elif action in ("photo", "video"):
                     self._begin(action)
                 elif action.startswith("hotkey:"):
-                    if self.vts_executor:
+                    if self.vts_hotkey_editing:
+                        self._edit_hotkey(action[7:])
+                    elif self.vts_executor:
                         self.vts_executor.submit(self._trigger_vts_hotkey, action[7:])
                 return
             if (self.state in ("result", "error") and
@@ -596,7 +697,7 @@ class BoothWindow:
         self._choose_background(index + (index >= current))
 
     def _begin(self, kind):
-        if self.state != "ready" or (self.vts_capture and (
+        if self.state != "ready" or self._hotkey_prompt_open or self.vts_hotkey_editing or (self.vts_capture and (
                 self.vts_models_open or (self.source == "vts" and (
                     self.vts_model_busy or self.vts_model_loading
                     or self.vts_model_wait_frame is not None or self.vts_model_error)))):
@@ -1015,8 +1116,12 @@ class BoothWindow:
                         text(label, layout[action], 22, "muted", True)
                 if not any(action.startswith("hotkey:") for action, _, _ in self._vts_buttons()) and self.source == "vts":
                     text("角色动作尚未就绪", layout["hotkeys"], 20, "muted", True)
+                if self.vts_hotkey_editing:
+                    text("编辑模式：点击下方动作改名 · 留空恢复原名 · Esc 取消",
+                         (870, 570, 1248, 608), 15, "cyan", True)
                 text((self.camera_error or self._camera_style_error or self.status) if self.source == "camera"
-                     else (self.composite_error or self.status),
+                     else (self.status if self.vts_hotkey_editing or self.status.startswith(("动作名称", "已取消修改", "保存动作名称", "无法打开动作", "当前角色或动作", "已恢复 VTS"))
+                           else self.composite_error or self.status),
                      (32, 694, 1248, 720), 16, "muted")
             else:
                 text("拍摄期间场景和动作已锁定", (870, 500, 1230, 554), 19, "muted", True)
@@ -1339,6 +1444,13 @@ class BoothWindow:
                         if preview is not None:
                             cv2.imshow("Naiwa - PhotoBooth", self._compose(preview))
                 key = cv2.pollKey() & 0xFF
+                if self._hotkey_prompt_open:
+                    continue
+                if self.vts_hotkey_editing:
+                    if key in (27, ord('q')):
+                        self.vts_hotkey_editing = False
+                        self.status = "已退出动作名称编辑"
+                    continue
                 if key in (ord('q'), 27):
                     self.state = "exit"
                 elif key == ord('s'):

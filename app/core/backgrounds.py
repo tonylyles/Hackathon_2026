@@ -48,14 +48,14 @@ def generate_background(name: str, size: tuple[int, int]) -> np.ndarray:
 
 
 def list_backgrounds(user_dir: str | Path | None = None) -> tuple[str, ...]:
-    """List built-ins followed by directly contained supported files, if any."""
+    """List directly contained supported image files, if any."""
     if user_dir is None:
-        return BUILTIN_BACKGROUNDS
+        return ()
     directory = Path(user_dir)
     if not directory.is_dir():
-        return BUILTIN_BACKGROUNDS
+        return ()
     files = (p.name for p in directory.iterdir() if p.is_file() and p.suffix.lower() in _IMAGE_SUFFIXES)
-    return BUILTIN_BACKGROUNDS + tuple(f"user:{name}" for name in sorted(files, key=lambda s: (s.casefold(), s)))
+    return tuple(f"user:{name}" for name in sorted(files, key=lambda s: (s.casefold(), s)))
 
 
 def _resource_path(name, user_dir):
@@ -87,8 +87,26 @@ def cover_image(image: np.ndarray, size: tuple[int, int]) -> np.ndarray:
     return resized[top:top + height, left:left + width].copy()
 
 
+def contain_image(image: np.ndarray, size: tuple[int, int]) -> np.ndarray:
+    """Show the whole BGR image centered on a black canvas without distortion."""
+    width, height = _size(size)
+    if image is None or image.ndim != 3 or image.shape[2] != 3 or not image.size:
+        raise ValueError("image must be a nonempty BGR image")
+    source_height, source_width = image.shape[:2]
+    scale = min(width / source_width, height / source_height)
+    resized_width = min(width, max(1, round(source_width * scale)))
+    resized_height = min(height, max(1, round(source_height * scale)))
+    interpolation = cv2.INTER_AREA if scale < 1 else cv2.INTER_LINEAR
+    resized = cv2.resize(image, (resized_width, resized_height), interpolation=interpolation)
+    canvas = np.zeros((height, width, 3), dtype=np.uint8)
+    left = (width - resized_width) // 2
+    top = (height - resized_height) // 2
+    canvas[top:top + resized_height, left:left + resized_width] = resized
+    return canvas
+
+
 def load_background(name: str, size: tuple[int, int], user_dir: str | Path | None = None) -> np.ndarray:
-    """Return a BGR backdrop, centered-cropped without distorting user images.
+    """Return a BGR backdrop with the entire user image centered and letterboxed.
 
     User images are read only from direct children of user_dir. Unicode paths
     work on Windows via imdecode rather than cv2.imread.
@@ -104,4 +122,4 @@ def load_background(name: str, size: tuple[int, int], user_dir: str | Path | Non
         raise ValueError("cannot read background image") from exc
     if image is None or image.size == 0:
         raise ValueError("cannot decode background image")
-    return cover_image(image, (width, height))
+    return contain_image(image, (width, height))

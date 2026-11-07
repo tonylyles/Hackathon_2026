@@ -21,6 +21,15 @@ class CountingStylizer:
 
 
 class BoothTests(unittest.TestCase):
+    def test_default_recording_is_ten_seconds(self):
+        rec = Recording(10, fps=2)
+        for tick in range(20):
+            rec.add(10 + tick / 2, np.zeros((2, 2, 3), np.uint8))
+        self.assertEqual(rec.seconds, 10)
+        self.assertFalse(rec.finished(19.9))
+        self.assertTrue(rec.finished(20))
+        self.assertEqual(len(list(rec.frames())), 20)
+
     def test_open_camera_uses_all_central_config(self):
         calls = {}
 

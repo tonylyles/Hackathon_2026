@@ -1,12 +1,15 @@
 """Real-time touch UI tests using a fake camera and deterministic helpers."""
 import unittest
+import tempfile
 import time
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import numpy as np
 
 from app.ui.booth_window import BoothWindow
+from app.core.vts_hotkey_labels import VTSHotkeyLabels
 from app.core.booth import Recording
 from app.core.chroma import BackgroundCatalog
 
@@ -25,6 +28,20 @@ class FakeProcessor:
 
 
 class BoothWindowTests(unittest.TestCase):
+    def test_record_duration_is_reflected_in_camera_button(self):
+        frame = np.zeros((12, 16, 3), np.uint8)
+        for seconds in (10, 3):
+            with self.subTest(seconds=seconds):
+                booth = BoothWindow(FakeCamera(frame), lambda image: image,
+                                    processor=FakeProcessor(), show_styled=False,
+                                    record_seconds=seconds)
+                try:
+                    self.assertEqual(booth.VIDEO[2], f"录制 {seconds} 秒")
+                    self.assertEqual(booth.record_seconds, seconds)
+                    self.assertNotIn("4 秒", booth.VIDEO[2])
+                finally:
+                    booth.executor.shutdown(wait=True)
+
     def test_avatar_feed_is_display_only_and_closed_on_exit(self):
         camera_frame = np.full((12, 16, 3), 30, np.uint8)
         avatar_frame = np.full((8, 8, 3), 220, np.uint8)
@@ -253,7 +270,7 @@ class BoothWindowTests(unittest.TestCase):
 class VTSLayoutTests(unittest.TestCase):
     def make_booth(self):
         class Catalog:
-            items = ("builtin:aurora", "user:" + "长背景名称" * 50)
+            items = ("user:背景.jpg", "user:" + "长背景名称" * 50 + ".jpg")
 
             def get(self, name, size):
                 return np.full((size[1], size[0], 3), (60, 70, 80), np.uint8)
@@ -459,7 +476,7 @@ class VTSLayoutTests(unittest.TestCase):
             booth = BoothWindow(None, lambda image: image, avatar_feed=Feed(),
                                 vts_capture=True, background_catalog=BackgroundCatalog(temp))
             self.addCleanup(booth.executor.shutdown, wait=True)
-            booth.background_index = 2
+            booth.background_index = 0
             booth._update_composite()
             first = booth.composed_frame.copy()
             booth._update_composite()
@@ -489,7 +506,7 @@ class VTSLayoutTests(unittest.TestCase):
                 return SimpleNamespace(frame=green.copy(), sequence=1, timestamp=time.monotonic())
 
         class Catalog:
-            items = ("builtin:aurora", "builtin:sunset")
+            items = ("user:场景一.jpg", "user:场景二.jpg")
             def get(self, name, size):
                 return np.full((size[1], size[0], 3), (200, 40, 20), np.uint8)
 
@@ -529,8 +546,7 @@ class VTSLayoutTests(unittest.TestCase):
                 return SimpleNamespace(frame=green.copy(), sequence=1, timestamp=time.monotonic())
 
         class Catalog:
-            items = ("builtin:aurora", "builtin:sunset") + tuple(
-                f"user:背景{i}.jpg" for i in range(8))
+            items = tuple(f"user:背景{i}.jpg" for i in range(8))
             def get(self, name, size):
                 color = (20, 50, 200) if name == "user:背景7.jpg" else (200, 40, 20)
                 return np.full((size[1], size[0], 3), color, np.uint8)
@@ -541,9 +557,9 @@ class VTSLayoutTests(unittest.TestCase):
         self.addCleanup(booth.executor.shutdown, wait=True)
         booth._update_composite()
         self.assertIn("random_background", [action for action, _, _ in booth._vts_buttons()])
-        with patch("app.ui.booth_window.random.randrange", return_value=8):
+        with patch("app.ui.booth_window.random.randrange", return_value=6):
             self.click(booth, booth.VTS_LAYOUT["random_background"])
-        self.assertEqual(booth.background_index, 9)
+        self.assertEqual(booth.background_index, 7)
         np.testing.assert_array_equal(booth.composed_frame[0, 0], [20, 50, 200])
         booth._begin("photo")
         self.assertEqual(booth.capture_background, "user:背景7.jpg")
@@ -562,21 +578,39 @@ class VTSLayoutTests(unittest.TestCase):
         self.assertEqual(len(booth.backgrounds.items), 2)
 
     def test_character_background_catalog_switches_without_cross_character_images(self):
-        from app.config import BACKGROUND_DIR
-        booth = self.make_booth()
-        booth._custom_background_catalog = False
-        booth.backgrounds = BackgroundCatalog(BACKGROUND_DIR)
-        booth.vts_model_name = "奶蛙"
-        booth._sync_background_catalog()
-        self.assertEqual(booth.backgrounds.user_dir, BACKGROUND_DIR / "奶蛙")
-        self.assertIn("user:最后的晚餐.jpg", booth.backgrounds.items)
-        self.assertNotIn("user:IMG_8324.jpg", booth.backgrounds.items)
-        booth.background_index = 4
-        booth.vts_model_name = "牛来"
-        booth._sync_background_catalog()
-        self.assertEqual(booth.backgrounds.user_dir, BACKGROUND_DIR / "牛来")
-        self.assertNotIn("user:最后的晚餐.jpg", booth.backgrounds.items)
-        self.assertEqual(booth.background_index, 0)
+        with tempfile.TemporaryDirectory() as temp, patch("app.ui.booth_window.BACKGROUND_DIR", Path(temp)):
+            root = Path(temp)
+            for character, names in {
+                "奶蛙": ("最后的晚餐.jpg",),
+                "牛来": ("IMG_8324.jpg",),
+                "肥嘟嘟": ("生活真是爽歪歪.webp", "开心袋鼠.webp", "心情真是委屈屈.webp"),
+            }.items():
+                directory = root / character
+                directory.mkdir()
+                for name in names:
+                    (directory / name).write_bytes(b"test")
+            booth = self.make_booth()
+            booth._custom_background_catalog = False
+            booth.backgrounds = BackgroundCatalog(root)
+            booth.vts_model_name = "奶蛙"
+            booth._sync_background_catalog()
+            self.assertEqual(booth.backgrounds.user_dir, root / "奶蛙")
+            self.assertIn("user:最后的晚餐.jpg", booth.backgrounds.items)
+            self.assertNotIn("user:IMG_8324.jpg", booth.backgrounds.items)
+            booth.background_index = 4
+            booth.vts_model_name = "牛来"
+            booth._sync_background_catalog()
+            self.assertEqual(booth.backgrounds.user_dir, root / "牛来")
+            self.assertNotIn("user:最后的晚餐.jpg", booth.backgrounds.items)
+            self.assertEqual(booth.background_index, 0)
+            booth.vts_model_name = "肥嘟嘟袋鼠"
+            booth._sync_background_catalog()
+            self.assertEqual(booth.backgrounds.user_dir, root / "肥嘟嘟")
+            self.assertEqual(set(booth.backgrounds.items),
+                             {"user:生活真是爽歪歪.webp", "user:开心袋鼠.webp",
+                              "user:心情真是委屈屈.webp"})
+            self.assertNotIn("builtin:aurora", booth.backgrounds.items)
+            self.assertNotIn("user:最后的晚餐.jpg", booth.backgrounds.items)
 
     def test_visible_button_centers_and_blank_space(self):
         booth = self.make_booth()
@@ -602,6 +636,93 @@ class VTSLayoutTests(unittest.TestCase):
             booth.state = state
             self.click(booth, booth.EXIT[1])
             self.assertEqual(booth.state, "exit")
+
+    def test_hotkey_editor_uses_local_names_without_changing_vts_ids(self):
+        with tempfile.TemporaryDirectory() as directory:
+            labels = VTSHotkeyLabels(Path(directory) / "labels.json")
+            booth = self.make_booth()
+            booth.hotkey_labels = labels
+            booth.vts_controller = object()
+            booth.vts_executor = MagicMock()
+            booth.vts_api_connected = True
+            booth.vts_model_id = "frog"
+            booth.vts_hotkey_items = [{"hotkeyID": "wave", "name": "挥手"},
+                                      {"hotkeyID": "jump", "name": "跳跃"}]
+            self.assertIn("edit_hotkeys", [action for action, _, _ in booth._vts_buttons()])
+            top = sorted((rect for action, rect, _ in booth._vts_buttons()
+                          if action in ("retry", "edit_hotkeys", "models")), key=lambda rect: rect[0])
+            self.assertEqual(len(top), 3)
+            self.assertTrue(top[0][2] < top[1][0] and top[1][2] < top[2][0])
+            self.click(booth, booth.VTS_LAYOUT["edit_hotkeys"])
+            self.assertTrue(booth.vts_hotkey_editing)
+            self.assertEqual([action for action, _, _ in booth._vts_buttons()],
+                             ["exit", "edit_hotkeys", "hotkey:wave", "hotkey:jump"])
+            with patch.object(booth, "_begin") as begin:
+                self.click(booth, booth.VTS_LAYOUT["photo"])
+                begin.assert_not_called()
+            booth._begin("video")
+            self.assertEqual(booth.state, "ready")
+            booth.hotkey_name_prompt = MagicMock(return_value="奶蛙招手")
+            self.click(booth, booth._hotkey_button_specs()[0][1])
+            booth.vts_executor.submit.assert_not_called()
+            self.assertFalse(booth.vts_hotkey_editing)
+            self.assertEqual(booth._hotkey_button_specs()[0],
+                             ("hotkey:wave", booth._hotkey_button_specs()[0][1], "奶蛙招手"))
+            self.click(booth, booth._hotkey_button_specs()[0][1])
+            booth.vts_executor.submit.assert_called_once_with(booth._trigger_vts_hotkey, "wave")
+            booth.vts_hotkey_items = [{"hotkeyID": "wave", "name": "刷新后的 VTS 名称"}]
+            self.assertEqual(booth._hotkey_button_specs()[0][2], "奶蛙招手")
+            booth.vts_model_id = "cow"
+            self.assertEqual(booth._hotkey_button_specs()[0][2], "刷新后的 VTS 名称")
+            booth.vts_model_id = "frog"
+            self.assertEqual(VTSHotkeyLabels(labels.path).label_for("frog", "wave", ""), "奶蛙招手")
+
+    def test_hotkey_editor_cancel_restore_and_changed_model(self):
+        with tempfile.TemporaryDirectory() as directory:
+            booth = self.make_booth()
+            booth.hotkey_labels = VTSHotkeyLabels(Path(directory) / "labels.json")
+            booth.vts_controller = object()
+            booth.vts_api_connected = True
+            booth.vts_model_id = "frog"
+            booth.vts_hotkey_items = [{"hotkeyID": "wave", "name": "挥手"}]
+            rect = booth._hotkey_button_specs()[0][1]
+            for response in (None, "  "):
+                self.click(booth, booth.VTS_LAYOUT["edit_hotkeys"])
+                booth.hotkey_name_prompt = lambda *_args, response=response: response
+                self.click(booth, rect)
+                self.assertEqual(booth._hotkey_button_specs()[0][2], "挥手")
+            self.click(booth, booth.VTS_LAYOUT["edit_hotkeys"])
+            def change_model(*_args):
+                booth.vts_model_id = "cow"
+                booth.vts_hotkey_items = [{"hotkeyID": "wave", "name": "另一个角色"}]
+                return "不应保存"
+            booth.hotkey_name_prompt = change_model
+            self.click(booth, rect)
+            self.assertEqual(booth._hotkey_button_specs()[0][2], "另一个角色")
+            self.assertEqual(booth.hotkey_labels.label_for("frog", "wave", "挥手"), "挥手")
+            self.assertIn("未保存", booth.status)
+            booth.vts_model_id = "frog"
+            booth.vts_hotkey_items = [{"hotkeyID": "wave", "name": "挥手"}]
+            self.click(booth, booth.VTS_LAYOUT["edit_hotkeys"])
+            booth.hotkey_name_prompt = MagicMock(side_effect=RuntimeError("no dialog"))
+            self.click(booth, rect)
+            self.assertEqual(booth._hotkey_button_specs()[0][2], "挥手")
+            self.assertFalse(booth.vts_hotkey_editing)
+            self.assertIn("无法打开", booth.status)
+
+    def test_hotkey_editor_write_error_keeps_original_label(self):
+        booth = self.make_booth()
+        booth.vts_controller = object()
+        booth.vts_api_connected = True
+        booth.vts_model_id = "frog"
+        booth.vts_hotkey_items = [{"hotkeyID": "wave", "name": "挥手"}]
+        booth.hotkey_name_prompt = lambda *_args: "新名字"
+        self.click(booth, booth.VTS_LAYOUT["edit_hotkeys"])
+        with patch.object(booth.hotkey_labels, "set_label", side_effect=OSError("read only")):
+            self.click(booth, booth._hotkey_button_specs()[0][1])
+        self.assertFalse(booth.vts_hotkey_editing)
+        self.assertEqual(booth._hotkey_button_specs()[0][2], "挥手")
+        self.assertIn("保存动作名称失败", booth.status)
 
     def test_hotkey_labels_ids_and_hit_geometry_share_specs(self):
         booth = self.make_booth()

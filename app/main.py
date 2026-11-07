@@ -167,7 +167,7 @@ if __name__ == "__main__":
                     help="anime=AnimeGANv2（需装好环境）mock=纯流程验证（零依赖）")
     ap.add_argument("--video", help="输入视频路径（模式 B）")
     ap.add_argument("--serve", action="store_true")
-    ap.add_argument("--booth", action="store_true", help="拍照/4秒录像展台模式")
+    ap.add_argument("--booth", action="store_true", help="拍照/10秒录像展台模式")
     ap.add_argument("--vts-preview", action="store_true", help="以 VTube Studio 虚拟摄像头作为展台拍摄源（不使用本地动漫风格化）")
     ap.add_argument("--avatar-booth", action="store_true", help="VTube Studio 奶蛙控制台")
     ap.add_argument("--port", type=int, default=8000)

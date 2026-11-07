@@ -5,14 +5,14 @@ import tempfile
 import uuid
 from pathlib import Path
 
-from app.config import OUTPUT_DIR, RECORD_FPS, ROOT
+from app.config import OUTPUT_DIR, RECORD_FPS, RECORD_SECONDS, ROOT
 from app.core.compose import frames_to_video
 from app.core.image_io import write_image
 from app.core.video_batch import stylize_frames
 
 
 class Recording:
-    def __init__(self, started, seconds=4, fps=24):
+    def __init__(self, started, seconds=RECORD_SECONDS, fps=RECORD_FPS):
         if seconds <= 0 or fps <= 0:
             raise ValueError("Recording duration and FPS must be positive")
         self.started, self.seconds, self.fps = started, seconds, fps

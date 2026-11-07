@@ -36,7 +36,7 @@ SHARPEN = True             # 显示前锐化（补偿 256px 放大的模糊感�
 DISPLAY_W, DISPLAY_H = 1280, 720
 
 # 模式 B
-RECORD_SECONDS = 4
+RECORD_SECONDS = 10
 RECORD_FPS = 24
 
 # 风格预设：name -> (animegan权重名 | SD prompt, negative)
